@@ -1,14 +1,14 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
-PROJECT(ClienServerEcn)
+PROJECT(simple_exchange)
+SET(CMAKE_CXX_STANDARD 20)
 
-FIND_PACKAGE(Boost 1.40 COMPONENTS system REQUIRED)
-FIND_PACKAGE(Threads REQUIRED)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/generators/conan_toolchain.cmake)
 
-SET(CMAKE_CXX_STANDARD 17)
+find_package(Boost REQUIRED)
+find_package(Threads REQUIRED)
 
-ADD_EXECUTABLE(Server Server.cpp Common.hpp json.hpp)
-TARGET_LINK_LIBRARIES(Server PRIVATE Threads::Threads ${Boost_LIBRARIES})
+add_executable(server server.cpp common.hpp json.hpp)
+target_link_libraries(server PRIVATE Threads::Threads Boost::boost)
 
-ADD_EXECUTABLE(Client Client.cpp Common.hpp json.hpp)
-TARGET_LINK_LIBRARIES(Client PRIVATE Threads::Threads ${Boost_LIBRARIES})
+add_executable(client client.cpp common.hpp json.hpp)
+target_link_libraries(client PRIVATE Threads::Threads Boost::boost)
