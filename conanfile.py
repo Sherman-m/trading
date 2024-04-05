@@ -9,6 +9,7 @@ class CurrencyMarketReceipe(ConanFile):
 
   def requirements(self):
     self.requires("boost/1.84.0")
+    self.requires("gtest/1.14.0")
     
   def build_requirements(self):
     self.tool_requires("cmake/3.22.6")
