@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cinttypes>
-#include "src/util/tagged_numeric.hpp"
+#include "trading/currency.hpp"
 
 int main() {
+  return EXIT_SUCCESS;
 }
