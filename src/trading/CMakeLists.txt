@@ -1,8 +1,13 @@
 set(headers
   currency
-  wallet)
+  wallet
+  market_member
+  market_member_fwd
+  order_details)
 
 set(sources
-  wallet)
+  wallet
+  market_member
+  )
 
 prepare_sources("${headers}" "${sources}")
