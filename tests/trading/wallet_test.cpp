@@ -4,7 +4,7 @@
 #include <tuple>
 
 using namespace trading;
-using namespace trading::currency;
+using namespace trading::currencies;
 
 class WalletByDefault : public testing::Test {
  protected:

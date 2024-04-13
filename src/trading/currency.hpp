@@ -5,7 +5,7 @@
 #include <cinttypes>
 
 namespace trading {
-namespace currency {
+namespace currencies {
 
 namespace detail {
 
@@ -22,7 +22,7 @@ using Usd = detail::Currency<UsdTag>;
 struct RublesTag {};
 using Rubles = detail::Currency<RublesTag>;
 
-}  // namespace currency
+}  // namespace currencies
 
 }  // namespace trading
 #endif
