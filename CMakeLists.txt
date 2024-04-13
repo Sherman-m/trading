@@ -17,3 +17,8 @@ include(cmake/Helpers.cmake)
 # preparing project sources and generate main target
 # and importing variables associated with certain modules.
 add_subdirectory(src)
+
+# if CMAKE_BUILD_TYPE equal Debug, then tests will be prepared and generated test targets.
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  add_subdirectory(tests)
+endif()
