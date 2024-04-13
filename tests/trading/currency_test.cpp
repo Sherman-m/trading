@@ -2,7 +2,7 @@
 
 #include "../../src/trading/currency.hpp"
 
-using namespace currency;
+using namespace trading::currency;
 
 TEST(CurrencyOperators, LvalueAddCurrency) {
   Usd u1(100);

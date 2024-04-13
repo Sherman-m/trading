@@ -4,6 +4,7 @@
 #include "../util/tagged_numeric.hpp"
 #include <cinttypes>
 
+namespace trading {
 namespace currency {
 
 namespace detail {
@@ -22,4 +23,6 @@ struct RublesTag {};
 using Rubles = detail::Currency<RublesTag>;
 
 }  // namespace currency
+
+}  // namespace trading
 #endif
