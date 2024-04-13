@@ -1,6 +1,7 @@
 set(headers)
 
 set(sources
-  currency_test)
+  currency_test
+  wallet_test)
 
 generate_test_targets("${headers}" "${sources}")

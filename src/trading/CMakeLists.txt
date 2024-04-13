@@ -1,6 +1,8 @@
 set(headers
-  currency)
+  currency
+  wallet)
 
-set(sources)
+set(sources
+  wallet)
 
 prepare_sources("${headers}" "${sources}")
