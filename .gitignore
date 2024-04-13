@@ -51,3 +51,4 @@ Thumbs.db
 # Build files
 build/
 CMakeUserPresets.json
+.vscode/
