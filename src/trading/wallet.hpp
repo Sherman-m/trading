@@ -9,7 +9,7 @@ namespace trading {
 
 class Wallet {
  public:
-  using BalanceType = std::tuple<currencies::Usd, currencies::Rubles>;
+  using BalanceType = currencies::TypesCurrencies;
 
  public:
   Wallet() = default;
