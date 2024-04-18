@@ -1,6 +1,8 @@
 set(headers
   tagged_numeric
-  tagged)
+  tagged
+  custom_type_traits
+  util)
 
 set(sources)
 

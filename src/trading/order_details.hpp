@@ -16,8 +16,6 @@ enum class OrderSide : int32_t { kBuy = -1, kSale = 1 };
 
 template <typename TargetCurrency, typename PaymentCurrency>
 struct OrderDetails {
-  // TODO: using SegmentType = Segment<TargetCurrency, PaymentCurrency>;
-
   explicit OrderDetails(MarketMember* market_member_ptr, size_t num_units,
                         PaymentCurrency unit_price, OrderSide side)
       : market_member_ptr(market_member_ptr),
