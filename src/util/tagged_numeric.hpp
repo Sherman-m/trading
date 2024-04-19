@@ -2,6 +2,7 @@
 #define TAGGED_NUMERIC_HPP
 
 #include "tagged.hpp"
+#include <cinttypes>
 
 namespace util {
 
@@ -43,7 +44,41 @@ class TaggedNumeric : public Tagged<Numeric, Tag> {
     TaggedNumeric result(this->value_ * -1);
     return result;
   }
+
+  TaggedNumeric& operator*=(int64_t num) & noexcept {
+    this->value_ *= num;
+    return *this;
+  }
+
+  const TaggedNumeric operator*(int64_t num) const noexcept {
+    TaggedNumeric result(*this);
+    result *= num;
+    return result;
+  }
+
+  TaggedNumeric& operator/=(int64_t num) & noexcept {
+    this->value_ /= num;
+    return *this;
+  }
+
+  const TaggedNumeric operator/(int64_t num) const noexcept {
+    TaggedNumeric result(*this);
+    result /= num;
+    return result;
+  }
 };
+
+template <typename Numeric, typename Tag>
+const TaggedNumeric<Numeric, Tag> operator*(
+    int64_t num, const TaggedNumeric<Numeric, Tag>& tagged_num) {
+  return tagged_num * num;
+}
+
+template <typename Numeric, typename Tag>
+const TaggedNumeric<Numeric, Tag> operator/(
+    int64_t num, const TaggedNumeric<Numeric, Tag>& tagged_num) {
+  return tagged_num / num;
+}
 
 }  // namespace util
 

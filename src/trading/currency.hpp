@@ -18,20 +18,16 @@ using Currency = util::TaggedNumeric<CurrencyNumericType, Tag>;
 
 }  // namespace detail
 
+/*-------------------------------------------TypesCurrencies---------------------------------------------------*/
 struct UsdTag {};
 using Usd = detail::Currency<UsdTag>;
 
 struct RublesTag {};
 using Rubles = detail::Currency<RublesTag>;
 
-// TODO: delete unnecessary currency
-struct DTag {};
-using D = detail::Currency<DTag>;
+/*-------------------------------------------------------------------------------------------------------------*/
 
-struct CTag {};
-using C = detail::Currency<CTag>;
-
-using TypesCurrencies = std::tuple<Usd, Rubles, D, C>;
+using TypesCurrencies = std::tuple<Usd, Rubles>;
 
 template <template <typename> typename Object>
 using TupleObj1ArgFromCurrencyTypesT =

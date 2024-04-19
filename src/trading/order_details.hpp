@@ -12,7 +12,7 @@ struct OrderBase {
   using Id = uint32_t;
 };
 
-enum class OrderSide : int32_t { kBuy = -1, kSale = 1 };
+enum class OrderSide : int32_t { kBuy = 1, kSale = -1 };
 
 template <typename TargetCurrency, typename PaymentCurrency>
 struct OrderDetails {
@@ -29,6 +29,7 @@ struct OrderDetails {
   PaymentCurrency unit_price;
   OrderSide side;
 };
+
 }  // namespace order_details
 
 }  // namespace trading

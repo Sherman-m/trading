@@ -13,7 +13,6 @@ class MarketMember {
  public:
   using Id = uint32_t;
 
-  // TODO: after implementation Order class
   using OrderId = order_details::OrderBase::Id;
   using OrderSide = order_details::OrderSide;
   template <typename TargetCurrency, typename PaymentCurrency>
