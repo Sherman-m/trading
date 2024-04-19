@@ -7,25 +7,26 @@
 
 using namespace util::custom_type_traits;
 
-class TupleTypesCat : public testing::Test {};
-
-TEST_F(TupleTypesCat, GoodExpectedTwoTupleTypesCat) {
+class TupleTypesCat : public testing::Test {
+ protected:
   using TupleTypes1 = std::tuple<int, double>;
   using TupleTypes2 = std::tuple<float, std::string>;
-  using TupleCatResult = tuple_types_cat_t<TupleTypes1, TupleTypes2>;
-  using Expected = std::tuple<int, double, float, std::string>;
 
-  constexpr bool result = std::is_same_v<TupleCatResult, Expected>;
+  using GoodExpected = std::tuple<int, double, float, std::string>;
+  using BadExpected = std::tuple<int, double, std::string, float>;
+};
+
+TEST_F(TupleTypesCat, GoodExpectedTwoTupleTypesCat) {
+  using TupleCatResult = tuple_types_cat_t<TupleTypes1, TupleTypes2>;
+
+  constexpr bool result = std::is_same_v<TupleCatResult, GoodExpected>;
   ASSERT_TRUE(result);
 }
 
 TEST_F(TupleTypesCat, BadExpectedTwoTupleTypesCat) {
-  using TupleTypes1 = std::tuple<int, double>;
-  using TupleTypes2 = std::tuple<float, std::string>;
   using TupleCatResult = tuple_types_cat_t<TupleTypes1, TupleTypes2>;
-  using Expected = std::tuple<int, double, std::string, float>;
 
-  constexpr bool result = std::is_same_v<TupleCatResult, Expected>;
+  constexpr bool result = std::is_same_v<TupleCatResult, BadExpected>;
   ASSERT_FALSE(result);
 }
 
