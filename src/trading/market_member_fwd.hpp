@@ -4,6 +4,7 @@
 namespace trading {
 
 class MarketMember;
-}
+
+}  // namespace trading
 
 #endif

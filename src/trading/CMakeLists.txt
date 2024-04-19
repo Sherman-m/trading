@@ -4,7 +4,9 @@ set(headers
   market_member
   market_member_fwd
   order_details
-  order)
+  order
+  deal_details
+  deal)
 
 set(sources
   wallet
