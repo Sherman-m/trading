@@ -21,6 +21,7 @@ class Order : public order_details::OrderBase {
   using DetailsType =
       order_details::OrderDetails<TargetCurrency, PaymentCurrency>;
 
+  // TODO: remove Orders from names
   using OrdersMatchingType = OrdersMatching<TargetCurrency, PaymentCurrency>;
   using OrdersMatchingResultType = OrdersMatchingType::Result;
 
@@ -32,15 +33,15 @@ class Order : public order_details::OrderBase {
       : id_(id),
         details_(std::move(details_)) {
   }
-
+  // TODO: remove prfix Get from names of methods
   Id GetId() const noexcept {
     return id_;
   }
-
+  // TODO: rename to Details
   const DetailsType& GetDetails() const noexcept {
     return details_;
   }
-
+  // TODO: rename to Details
   DetailsType& GetDetails() noexcept {
     return details_;
   }
@@ -49,11 +50,18 @@ class Order : public order_details::OrderBase {
     return details_.num_units == 0;
   }
 
+  friend bool operator==(const Order& first, const Order& second) {
+    return first.id_ == second.id_ && first.details_ == second.details_;
+  }
+
+  friend auto operator<=>(const Order&, const Order&) = default;
+
  private:
   Id id_;
   DetailsType details_;
 };
 
+// TODO: remove freindship with Order class and use methods of Order class
 template <typename TargetCurrency, typename PaymentCurrency>
 class OrdersMatching {
  public:
@@ -74,9 +82,7 @@ class OrdersMatching {
       }
     }
 
-    bool operator==(const Result& other) const noexcept {
-      return diff_ == other.diff_ && paid_ == other.paid_;
-    }
+    friend auto operator<=>(const Result&, const Result&) = default;
 
     MarketMember* BuyerPtr() const noexcept {
       return buyer_seller_ptrs_.first;
@@ -127,6 +133,7 @@ class OrdersMatching {
     PaymentCurrency paid_;
   };
 
+  // TODO: rename to DoMatch
   static bool DoOrdersMatch(const OrderType& buy_order,
                             const OrderType& sale_order) {
     if (buy_order.details_.side == OrderType::Side::kSale &&
@@ -140,6 +147,7 @@ class OrdersMatching {
            (buy_order.details_.unit_price >= sale_order.details_.unit_price);
   }
 
+  // TODO: rename to Match
   static const Result MatchOrders(OrderType& buy_order, OrderType& sale_order) {
     if (buy_order.details_.side == OrderType::Side::kSale &&
         sale_order.details_.side == OrderType::Side::kBuy) {

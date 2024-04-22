@@ -24,6 +24,8 @@ struct OrderDetails {
         side(side) {
   }
 
+  friend auto operator<=>(const OrderDetails&, const OrderDetails&) = default;
+
   MarketMember* market_member_ptr;
   size_t num_units;
   PaymentCurrency unit_price;

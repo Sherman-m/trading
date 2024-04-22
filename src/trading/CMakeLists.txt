@@ -5,8 +5,12 @@ set(headers
   market_member_fwd
   order_details
   order
+  order_fwd
   deal_details
-  deal)
+  deal
+  deal_fwd
+  storage
+  default_storage)
 
 set(sources
   wallet
