@@ -54,13 +54,13 @@ class DealFromOrdersMatchingResult : public SaleOrder,
                                      public BuyOrder {
  protected:
   DealType::Id id_{0};
-  size_t diff_ = std::min(buy_order_.GetOrderDetails().num_units,
-                          sale_order_.GetOrderDetails().num_units);
-  PaymentCurrency paid_ = diff_ * buy_order_.GetOrderDetails().unit_price;
+  size_t diff_ = std::min(buy_order_.GetDetails().num_units,
+                          sale_order_.GetDetails().num_units);
+  PaymentCurrency paid_ = diff_ * buy_order_.GetDetails().unit_price;
 
   void CheckingBuyerPart(const DealType::PartType& buyer_part) {
     ASSERT_EQ(buyer_part.market_member_ptr_,
-              buy_order_.GetOrderDetails().market_member_ptr);
+              buy_order_.GetDetails().market_member_ptr);
     ASSERT_EQ(buyer_part.order_id, buy_order_.GetId());
     ASSERT_EQ(buyer_part.num_units, diff_);
     ASSERT_EQ(buyer_part.paid, paid_);
@@ -69,7 +69,7 @@ class DealFromOrdersMatchingResult : public SaleOrder,
 
   void CheckingSellerPart(const DealType::PartType& seller_part) {
     ASSERT_EQ(seller_part.market_member_ptr_,
-              sale_order_.GetOrderDetails().market_member_ptr);
+              sale_order_.GetDetails().market_member_ptr);
     ASSERT_EQ(seller_part.order_id, sale_order_.GetId());
     ASSERT_EQ(seller_part.num_units, diff_);
     ASSERT_EQ(seller_part.paid, paid_);

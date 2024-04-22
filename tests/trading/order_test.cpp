@@ -61,8 +61,8 @@ class TwoNonMatchingOrdersByNumUnits : public SaleOrder,
                                        public BuyOrder {
  protected:
   void SetUp() override {
-    buy_order_.GetOrderDetails().num_units +=
-        sale_order_.GetOrderDetails().num_units;
+    buy_order_.GetDetails().num_units +=
+        sale_order_.GetDetails().num_units;
   }
 };
 
@@ -76,8 +76,8 @@ class TwoNonMatchingOrdersByUnitPrice : public SaleOrder,
                                         public BuyOrder {
  protected:
   void SetUp() override {
-    buy_order_.GetOrderDetails().unit_price =
-        sale_order_.GetOrderDetails().unit_price / 4;
+    buy_order_.GetDetails().unit_price =
+        sale_order_.GetDetails().unit_price / 4;
   }
 };
 
@@ -99,15 +99,15 @@ TEST_F(TwoMatchingOrders, CheckingMatchingOrders) {
 
 class OrdersMatchingResult : public TwoMatchingOrders {
  protected:
-  size_t diff_ = std::min(buy_order_.GetOrderDetails().num_units,
-                          sale_order_.GetOrderDetails().num_units);
-  PaymentCurrency paid_ = diff_ * buy_order_.GetOrderDetails().unit_price;
+  size_t diff_ = std::min(buy_order_.GetDetails().num_units,
+                          sale_order_.GetDetails().num_units);
+  PaymentCurrency paid_ = diff_ * buy_order_.GetDetails().unit_price;
 
   void Checking(const OrdersMatchingResultType& result) {
     ASSERT_EQ(result.BuyerPtr(),
-              buy_order_.GetOrderDetails().market_member_ptr);
+              buy_order_.GetDetails().market_member_ptr);
     ASSERT_EQ(result.SellerPtr(),
-              sale_order_.GetOrderDetails().market_member_ptr);
+              sale_order_.GetDetails().market_member_ptr);
 
     ASSERT_EQ(result.BuyerOrderId(), buy_order_.GetId());
     ASSERT_EQ(result.SellerOrderId(), sale_order_.GetId());

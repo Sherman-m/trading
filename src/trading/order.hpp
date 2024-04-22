@@ -37,11 +37,11 @@ class Order : public order_details::OrderBase {
     return id_;
   }
 
-  const DetailsType& GetOrderDetails() const noexcept {
+  const DetailsType& GetDetails() const noexcept {
     return details_;
   }
 
-  DetailsType& GetOrderDetails() noexcept {
+  DetailsType& GetDetails() noexcept {
     return details_;
   }
 
