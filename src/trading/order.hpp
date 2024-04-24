@@ -133,7 +133,9 @@ class OrdersMatching {
         sale_order.details_.side == OrderType::Side::kBuy) {
       return DoOrdersMatch(sale_order, buy_order);
     }
-    return (buy_order.details_.side != sale_order.details_.side) &&
+    return (buy_order.details_.market_member_ptr !=
+            sale_order.details_.market_member_ptr) &&
+           (buy_order.details_.side != sale_order.details_.side) &&
            (buy_order.details_.num_units <= sale_order.details_.num_units) &&
            (buy_order.details_.unit_price >= sale_order.details_.unit_price);
   }

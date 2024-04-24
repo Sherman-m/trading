@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "../../src/trading/market_member.hpp"
 #include "../../src/trading/order.hpp"
 #include "../../src/trading/deal.hpp"
 #include "../../src/trading/currency.hpp"
@@ -8,7 +9,7 @@ using namespace trading;
 using namespace order_details;
 using namespace currencies;
 
-class CommonForTests : public testing::Test {
+class CommonForDealTest : public testing::Test {
  protected:
   using TargetCurrency = Usd;
   using PaymentCurrency = Rubles;
@@ -19,16 +20,17 @@ class CommonForTests : public testing::Test {
 
   using DealType = Deal<TargetCurrency, PaymentCurrency>;
 
-  MarketMember* zero_mm_ptr_{nullptr};
+  MarketMember mm_1_{0};
+  MarketMember mm_2_{1};
 };
 
-class SaleOrderDetails : virtual public CommonForTests {
+class SaleOrderDetails : virtual public CommonForDealTest {
  protected:
   OrderType::Id id_{0};
   size_t num_units_{50};
   PaymentCurrency unit_price_{90};
   OrderType::Side side_{OrderType::Side::kSale};
-  OrderType::DetailsType details_{zero_mm_ptr_, num_units_, unit_price_, side_};
+  OrderType::DetailsType details_{&mm_1_, num_units_, unit_price_, side_};
 };
 
 class SaleOrder : public SaleOrderDetails {
@@ -36,13 +38,13 @@ class SaleOrder : public SaleOrderDetails {
   OrderType sale_order_{id_, details_};
 };
 
-class BuyOrderDetails : virtual public CommonForTests {
+class BuyOrderDetails : virtual public CommonForDealTest {
  protected:
   OrderType::Id id_{1};
   size_t num_units_{30};
   PaymentCurrency unit_price_{92};
   OrderType::Side side_{OrderType::Side::kBuy};
-  OrderType::DetailsType details_{zero_mm_ptr_, num_units_, unit_price_, side_};
+  OrderType::DetailsType details_{&mm_2_, num_units_, unit_price_, side_};
 };
 
 class BuyOrder : public BuyOrderDetails {
