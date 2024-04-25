@@ -14,26 +14,25 @@ class Wallet {
  public:
   Wallet() = default;
 
-  const BalanceType& GetTotalBalance() const noexcept {
+  const BalanceType& TotalBalance() const noexcept {
     return balance_;
   }
 
   template <typename Currency>
-  const Currency& GetCurrencyBalance() const {
+  const Currency& CurrencyBalance() const {
     return std::get<Currency>(balance_);
   }
 
   template <typename Currency,
             std::enable_if_t<!std::is_arithmetic_v<Currency>, bool> = true>
-  void Accure(const Currency& amount) {
+  void TopUp(const Currency& amount) {
     auto& currency_balance = std::get<Currency>(balance_);
     currency_balance += amount;
   }
 
   template <typename Currency>
-  void Accure(
-      size_t num_units,
-      const std::type_identity_t<Currency>& currency_type = Currency()) {
+  void TopUp(size_t num_units,
+             const std::type_identity_t<Currency>& currency_type = Currency()) {
     auto& currency_balance = std::get<Currency>(balance_);
     currency_balance += Currency(num_units);
   }

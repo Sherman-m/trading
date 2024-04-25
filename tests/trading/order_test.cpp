@@ -4,171 +4,190 @@
 #include "../../src/trading/order.hpp"
 #include "../../src/trading/currency.hpp"
 
+namespace order_test {
+
 using namespace trading;
 using namespace order_details;
 using namespace currencies;
+
+/*------------------------------------------------------------Common--------------------------------------------------------------*/
 
 class CommonForOrderTest : public testing::Test {
  protected:
   using TargetCurrency = Usd;
   using PaymentCurrency = Rubles;
+
   using OrderType = Order<TargetCurrency, PaymentCurrency>;
-  using OrdersMatchingType = OrderType::OrdersMatchingType;
-  using OrdersMatchingResultType = OrderType::OrdersMatchingResultType;
+
+  using OrdersMatchingType = OrderType::MatchingType;
+  using OrdersMatchingResultType = OrdersMatchingType::Result;
 
   MarketMember mm_1_{1};
   MarketMember mm_2_{2};
+
+  const size_t num_units_50_{50};
+  const size_t num_units_30_{30};
+
+  const PaymentCurrency unit_price_90_{90};
+  const PaymentCurrency unit_price_30_{30};
+
+  OrderType::Side sale_side_{OrderType::Side::kSale};
+  OrderType::Side buy_side_{OrderType::Side::kBuy};
+
+  static OrderType::ID order_id;
 };
 
-class SaleOrderDetailsMM1 : virtual public CommonForOrderTest {
+CommonForOrderTest::OrderType::ID CommonForOrderTest::order_id = 0;
+
+/*------------------------------------------------------------MM1-----------------------------------------------------------------*/
+
+class SaleOrdersMM1 : virtual public CommonForOrderTest {
  protected:
-  OrderType::Id id_{0};
-  size_t num_units_{50};
-  PaymentCurrency unit_price_{90};
-  OrderType::Side side_{OrderType::Side::kSale};
-  OrderType::DetailsType details_{&mm_1_, num_units_, unit_price_, side_};
+  OrderType sale_order_50_for_90_{
+      ++order_id, OrderType::DetailsType{&mm_1_, num_units_50_, unit_price_90_,
+                                         sale_side_}};
+
+  OrderType sale_order_50_for_30_{
+      ++order_id, OrderType::DetailsType{&mm_1_, num_units_50_, unit_price_30_,
+                                         sale_side_}};
+
+  OrderType sale_order_30_for_30_{
+      ++order_id, OrderType::DetailsType{&mm_1_, num_units_30_, unit_price_30_,
+                                         sale_side_}};
 };
 
-class BuyOrderDetailsMM1 : virtual public CommonForOrderTest {
+class BuyOrdersMM1 : virtual public CommonForOrderTest {
  protected:
-  OrderType::Id id_{0};
-  size_t num_units_{50};
-  PaymentCurrency unit_price_{90};
-  OrderType::Side side_{OrderType::Side::kBuy};
-  OrderType::DetailsType details_{&mm_1_, num_units_, unit_price_, side_};
+  OrderType buy_order_50_for_90_{
+      ++order_id,
+      OrderType::DetailsType{&mm_1_, num_units_50_, unit_price_90_, buy_side_}};
 };
 
-class SaleOrderMM1 : public SaleOrderDetailsMM1 {
+/*------------------------------------------------------------MM2-----------------------------------------------------------------*/
+
+class BuyOrdersMM2 : virtual public CommonForOrderTest {
  protected:
-  OrderType sale_order_{id_, details_};
+  OrderType buy_order_50_for_90_{
+      ++order_id,
+      OrderType::DetailsType{&mm_2_, num_units_50_, unit_price_90_, buy_side_}};
+
+  OrderType buy_order_30_for_30_{
+      ++order_id,
+      OrderType::DetailsType{&mm_2_, num_units_30_, unit_price_30_, buy_side_}};
 };
 
-class BuyOrderMM1 : public BuyOrderDetailsMM1 {
+class SaleOrdersMM2 : virtual public CommonForOrderTest {
  protected:
-  OrderType buy_order_{id_, details_};
+  OrderType sale_order_30_for_30_{
+      ++order_id, OrderType::DetailsType{&mm_2_, num_units_30_, unit_price_30_,
+                                         sale_side_}};
 };
 
-class SaleOrderDetailsMM2 : virtual public CommonForOrderTest {
- protected:
-  OrderType::Id id_{1};
-  size_t num_units_{30};
-  PaymentCurrency unit_price_{92};
-  OrderType::Side side_{OrderType::Side::kSale};
-  OrderType::DetailsType details_{&mm_2_, num_units_, unit_price_, side_};
-};
+/*------------------------------------------------------------tests---------------------------------------------------------------*/
 
-class BuyOrderDetailsMM2 : virtual public CommonForOrderTest {
- protected:
-  OrderType::Id id_{1};
-  size_t num_units_{30};
-  PaymentCurrency unit_price_{92};
-  OrderType::Side side_{OrderType::Side::kBuy};
-  OrderType::DetailsType details_{&mm_2_, num_units_, unit_price_, side_};
-};
-
-class SaleOrderMM2 : public SaleOrderDetailsMM2 {
- protected:
-  OrderType sale_order_{id_, details_};
-};
-
-class BuyOrderMM2 : public BuyOrderDetailsMM2 {
- protected:
-  OrderType buy_order_{id_, details_};
-};
-
-class TwoOrdersWithSameSide : public SaleOrderMM1,
-                              public SaleOrderMM2 {};
+class TwoOrdersWithSameSide : public SaleOrdersMM1,
+                              public SaleOrdersMM2 {};
 
 TEST_F(TwoOrdersWithSameSide, OrdersWithSameSideDoNotMatch) {
-  ASSERT_FALSE(OrdersMatchingType::DoOrdersMatch(SaleOrderMM1::sale_order_,
-                                                 SaleOrderMM2::sale_order_));
-  ASSERT_THROW(OrdersMatchingType::MatchOrders(SaleOrderMM1::sale_order_,
-                                               SaleOrderMM2::sale_order_),
+  ASSERT_FALSE(
+      OrdersMatchingType::DoMatch(SaleOrdersMM1::sale_order_30_for_30_,
+                                  SaleOrdersMM2::sale_order_30_for_30_));
+  ASSERT_THROW(OrdersMatchingType::Match(SaleOrdersMM1::sale_order_30_for_30_,
+                                         SaleOrdersMM2::sale_order_30_for_30_),
                std::runtime_error);
 }
 
-class TwoOrdersOneMember : public SaleOrderMM1,
-                           public BuyOrderMM1 {};
+class TwoOrdersOneMember : public SaleOrdersMM1,
+                           public BuyOrdersMM1 {};
 
 TEST_F(TwoOrdersOneMember, OrdersOneMemberDoesNotMatch) {
-  ASSERT_FALSE(OrdersMatchingType::DoOrdersMatch(sale_order_, buy_order_));
-  ASSERT_THROW(OrdersMatchingType::MatchOrders(sale_order_, buy_order_),
-               std::runtime_error);
+  ASSERT_FALSE(
+      OrdersMatchingType::DoMatch(sale_order_50_for_90_, buy_order_50_for_90_));
+  ASSERT_THROW(
+      OrdersMatchingType::Match(sale_order_50_for_90_, buy_order_50_for_90_),
+      std::runtime_error);
 }
 
-class TwoNonMatchingOrdersByNumUnits : public SaleOrderMM1,
-                                       public BuyOrderMM2 {
- protected:
-  void SetUp() override {
-    buy_order_.GetDetails().num_units += sale_order_.GetDetails().num_units;
-  }
-};
-
-TEST_F(TwoNonMatchingOrdersByNumUnits, OrdersDoNotMatchInNumUnits) {
-  ASSERT_FALSE(OrdersMatchingType::DoOrdersMatch(sale_order_, buy_order_));
-  ASSERT_THROW(OrdersMatchingType::MatchOrders(sale_order_, buy_order_),
-               std::runtime_error);
-}
-
-class TwoNonMatchingOrdersByUnitPrice : public SaleOrderMM1,
-                                        public BuyOrderMM2 {
- protected:
-  void SetUp() override {
-    buy_order_.GetDetails().unit_price =
-        sale_order_.GetDetails().unit_price / 4;
-  }
-};
+class TwoNonMatchingOrdersByUnitPrice : public SaleOrdersMM1,
+                                        public BuyOrdersMM2 {};
 
 TEST_F(TwoNonMatchingOrdersByUnitPrice, OrdersDoNotMatchInUnitPrice) {
-  ASSERT_FALSE(OrdersMatchingType::DoOrdersMatch(sale_order_, buy_order_));
-  ASSERT_THROW(OrdersMatchingType::MatchOrders(sale_order_, buy_order_),
-               std::runtime_error);
+  ASSERT_FALSE(
+      OrdersMatchingType::DoMatch(sale_order_50_for_90_, buy_order_30_for_30_));
+  ASSERT_THROW(
+      OrdersMatchingType::Match(sale_order_50_for_90_, buy_order_30_for_30_),
+      std::runtime_error);
 }
 
-class TwoMatchingOrders : public SaleOrderMM1,
-                          public BuyOrderMM2 {};
+class TwoMatchingOrders : public SaleOrdersMM1,
+                          public BuyOrdersMM2 {};
 
 TEST_F(TwoMatchingOrders, CheckingMatchingOrders) {
-  ASSERT_TRUE(OrdersMatchingType::DoOrdersMatch(buy_order_, sale_order_));
-  ASSERT_TRUE(OrdersMatchingType::DoOrdersMatch(sale_order_, buy_order_));
+  ASSERT_TRUE(
+      OrdersMatchingType::DoMatch(buy_order_50_for_90_, sale_order_50_for_90_));
+  ASSERT_TRUE(
+      OrdersMatchingType::DoMatch(sale_order_50_for_90_, buy_order_50_for_90_));
 
-  ASSERT_NO_THROW(OrdersMatchingType::MatchOrders(sale_order_, buy_order_));
+  ASSERT_NO_THROW(
+      OrdersMatchingType::Match(sale_order_50_for_90_, buy_order_50_for_90_));
 }
 
 class OrdersMatchingResult : public TwoMatchingOrders {
  protected:
-  size_t diff_ = std::min(buy_order_.GetDetails().num_units,
-                          sale_order_.GetDetails().num_units);
-  PaymentCurrency paid_ = diff_ * buy_order_.GetDetails().unit_price;
+  void Checking(OrderType& buy_order, OrderType& sale_order) {
+    if (buy_order.Details().Side() == OrderType::Side::kSale &&
+        sale_order.Details().Side() == OrderType::Side::kBuy) {
+      return Checking(sale_order, buy_order);
+    }
+    auto [diff, paid] = CalcDiffPaid(buy_order, sale_order);
+    auto matching_result = OrdersMatchingType::Match(sale_order, buy_order);
 
-  void Checking(const OrdersMatchingResultType& result) {
-    ASSERT_EQ(result.BuyerPtr(), buy_order_.GetDetails().market_member_ptr);
-    ASSERT_EQ(result.SellerPtr(), sale_order_.GetDetails().market_member_ptr);
+    ASSERT_EQ(matching_result.BuyerPtr(),
+              buy_order.Details().MarketMemberPtr());
+    ASSERT_EQ(matching_result.SellerPtr(),
+              sale_order.Details().MarketMemberPtr());
 
-    ASSERT_EQ(result.BuyerOrderId(), buy_order_.GetId());
-    ASSERT_EQ(result.SellerOrderId(), sale_order_.GetId());
+    ASSERT_EQ(matching_result.BuyerOrderId(), buy_order.Id());
+    ASSERT_EQ(matching_result.SellerOrderId(), sale_order.Id());
 
-    ASSERT_EQ(result.Diff(), diff_);
-    ASSERT_EQ(result.Paid(), paid_);
+    ASSERT_EQ(matching_result.Diff(), diff);
+    ASSERT_EQ(matching_result.Paid(), paid);
+  }
 
-    ASSERT_TRUE(buy_order_.IsCompleted());
-    ASSERT_FALSE(sale_order_.IsCompleted());
+ private:
+  std::pair<size_t, PaymentCurrency> CalcDiffPaid(const OrderType& buy_order,
+                                                  const OrderType& sale_order) {
+    size_t diff = std::min(buy_order.Details().NumUnits(),
+                           sale_order.Details().NumUnits());
+    PaymentCurrency paid = diff * buy_order.Details().UnitPrice();
+
+    return {diff, paid};
   }
 };
 
 TEST_F(OrdersMatchingResult, IncorrectOrdersMatchingResultConstruction) {
-  ASSERT_THROW(OrdersMatchingResultType(sale_order_, sale_order_),
-               std::runtime_error);
+  ASSERT_THROW(
+      OrdersMatchingResultType(sale_order_50_for_90_, sale_order_50_for_90_),
+      std::runtime_error);
 }
 
 TEST_F(OrdersMatchingResult, CorrectOrdersMatchingResultConstruction) {
-  ASSERT_NO_THROW(OrdersMatchingResultType(sale_order_, buy_order_));
+  ASSERT_NO_THROW(
+      OrdersMatchingResultType(sale_order_30_for_30_, buy_order_50_for_90_));
 }
 
-TEST_F(OrdersMatchingResult, CheckingOrdersMatchingResultConstruction) {
-  Checking(OrdersMatchingResultType(sale_order_, buy_order_));
+TEST_F(OrdersMatchingResult, CheckingPartlyMatching) {
+  Checking(sale_order_30_for_30_, buy_order_50_for_90_);
+
+  ASSERT_TRUE(sale_order_30_for_30_.IsCompleted());
+  ASSERT_FALSE(buy_order_50_for_90_.IsCompleted());
 }
 
-TEST_F(OrdersMatchingResult, CheckingOrdersMatchingResult) {
-  Checking(OrdersMatchingType::MatchOrders(sale_order_, buy_order_));
+TEST_F(OrdersMatchingResult, CheckingFullMatching) {
+  Checking(sale_order_30_for_30_, buy_order_30_for_30_);
+
+  ASSERT_TRUE(sale_order_30_for_30_.IsCompleted());
+  ASSERT_TRUE(buy_order_30_for_30_.IsCompleted());
 }
+
+}  // namespace order_test

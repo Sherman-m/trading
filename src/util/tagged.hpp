@@ -31,7 +31,7 @@ class Tagged {
     return value_;
   }
 
-  auto operator<=>(const Tagged&) const noexcept = default;
+  friend auto operator<=>(const Tagged&, const Tagged&) = default;
 
  protected:
   ValueType value_;

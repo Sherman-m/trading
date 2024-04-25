@@ -25,10 +25,9 @@ using Usd = detail::Currency<UsdTag>;
 struct RublesTag {};
 using Rubles = detail::Currency<RublesTag>;
 
-/*-------------------------------------------------------------------------------------------------------------*/
-
 using TypesCurrencies = std::tuple<Usd, Rubles>;
 
+/*-------------------------------------------------------------------------------------------------------------*/
 template <template <typename> typename Object>
 using TupleObj1ArgFromCurrencyTypesT =
     util::custom_type_traits::tuple_obj1arg_from_types_t<Object,

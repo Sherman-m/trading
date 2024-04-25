@@ -18,94 +18,95 @@ template <typename TargetCurrency, typename PaymentCurrency>
 class OrderStorage {
  public:
   using OrderType = Order<TargetCurrency, PaymentCurrency>;
-  using OrderMatchingType = OrderType::OrdersMatchingType;
+  using OrderMatchingType = OrderType::MatchingType;
 
  public:
   OrderStorage() = default;
 
   void Add(OrderType order) {
     auto key = GenerateKey(order);
-    auto order_id = order.GetId();
-    auto order_side = order.GetDetails().side;
+    auto order_id = order.Id();
+    auto order_side = order.Details().Side();
 
     auto [it, is_inserted] =
-        GetMapOrders(order_side).emplace(std::move(key), std::move(order));
+        MapOrders(order_side).emplace(std::move(key), std::move(order));
     if (is_inserted) {
       order_id_to_location_.emplace(std::move(order_id),
                                     OrderLocation(order_side, it));
     }
   }
 
-  std::optional<OrderType> Get(OrderType::Id id) const {
+  std::optional<OrderType> Get(OrderType::ID id) const {
     if (auto it = order_id_to_location_.find(id);
         it != order_id_to_location_.end()) {
-      return it->second.GetOrder();
+      return it->second.Order();
     }
     return std::nullopt;
   }
 
-  void Delete(OrderType::Id id) {
+  void Delete(OrderType::ID id) {
     if (auto it = order_id_to_location_.find(id);
         it != order_id_to_location_.end()) {
-      order_side_to_map_orders_.erase(it->second.GetKey());
+      order_side_to_map_orders_.erase(it->second.Key());
       order_id_to_location_.erase(id);
     }
   }
 
   void FindMatches() {
-    for (auto buy_order_it = GetMapOrders(OrderType::Side::kBuy).begin();
-         buy_order_it != GetMapOrders(OrderType::Side::kBuy).end();) {
-      for (auto sale_order_it = GetMapOrders(OrderType::Side::kSale).begin();
-           sale_order_it != GetMapOrders(OrderType::Side::kSale).end();) {
-        if (OrderMatchingType::DoOrdersMatch(buy_order_it->second,
-                                             sale_order_it->second)) {
-          auto matching_res = OrderMatchingType::MatchOrders(
-              buy_order_it->second, sale_order_it->second);
+    for (auto sale_order_it = MapOrders(OrderType::Side::kSale).begin();
+         sale_order_it != MapOrders(OrderType::Side::kSale).end();
+         MoveMapOrderIter(sale_order_it)) {
+      for (auto buy_order_it = MapOrders(OrderType::Side::kBuy).rbegin();
+           buy_order_it != MapOrders(OrderType::Side::kBuy).rend();
+           MoveMapOrderReverseIter(buy_order_it)) {
+        if (OrderMatchingType::DoMatch(buy_order_it->second,
+                                       sale_order_it->second)) {
+          auto matching_res = OrderMatchingType::Match(buy_order_it->second,
+                                                       sale_order_it->second);
 
           // TODO: after implementation TradingPlatform
           // TradingPlatform::Get()->CloseDeal(std::move(matching_res));
         }
-        buy_order_it = (buy_order_it->second.IsCompleted())
-                           ? Delete(buy_order_it)
-                           : std::next(buy_order_it);
-        sale_order_it = (sale_order_it->second.IsCompleted())
-                            ? Delete(sale_order_it)
-                            : std::next(sale_order_it);
+
+        if (sale_order_it->second.IsCompleted()) {
+          MoveMapOrderReverseIter(buy_order_it);
+          break;
+        }
       }
     }
   }
 
  private:
-  // TODO: StorageKey maybe better
-  class OrderStorageKey;
+  class StorageKey;
   class OrderLocation;
-  struct OrderStorageKeyComp;
+  struct StorageKeyComp;
 
-  using MapOrders = std::map<OrderStorageKey, OrderType, OrderStorageKeyComp>;
-  using MapOrdersIter = typename MapOrders::iterator;
+  using MapOrdersType = std::map<StorageKey, OrderType, StorageKeyComp>;
+  using MapOrdersIterType = typename MapOrdersType::iterator;
+  using MapOrdersReverseIterType = typename MapOrdersType::reverse_iterator;
 
   using OrderSideToMapOrders =
-      std::unordered_map<typename OrderType::Side, MapOrders>;
-  using OrderIdToLocation =
-      std::unordered_map<typename OrderType::Id, OrderLocation>;
+      std::unordered_map<typename OrderType::Side, MapOrdersType>;
+  using OrderIDToLocation =
+      std::unordered_map<typename OrderType::ID, OrderLocation>;
 
-  class OrderStorageKey {
-    friend struct OrderStorageKeyComp;
+  class StorageKey {
+    friend struct StorageKeyComp;
 
    public:
-    explicit OrderStorageKey(const OrderType& order)
-        : order_id_(order.GetId()),
-          unit_price_(order.GetDetails().unit_price) {
+    explicit StorageKey(const OrderType& order)
+        : order_id_(order.Id()),
+          unit_price_(order.Details().UnitPrice()) {
     }
 
    private:
-    OrderType::Id order_id_;
+    OrderType::ID order_id_;
     PaymentCurrency unit_price_;
   };
 
-  struct OrderStorageKeyComp {
-    bool operator()(const OrderStorageKey& first,
-                    const OrderStorageKey& second) const noexcept {
+  struct StorageKeyComp {
+    bool operator()(const StorageKey& first,
+                    const StorageKey& second) const noexcept {
       if (first.unit_price_ == second.unit_price_) {
         return first.order_id_ < second.order_id_;
       }
@@ -115,43 +116,53 @@ class OrderStorage {
 
   class OrderLocation {
    public:
-    explicit OrderLocation(OrderType::Side side, MapOrdersIter it)
+    explicit OrderLocation(OrderType::Side side, MapOrdersIterType it)
         : side_(side),
           it_(it) {
     }
-    // TODO: remove prefix Get from names of methods
-    OrderType::Side GetSide() const noexcept {
+
+    OrderType::Side Side() const noexcept {
       return side_;
     }
-    // TODO: remove prfix Get from names of methods
-    OrderStorageKey GetKey() const noexcept {
+
+    StorageKey Key() const noexcept {
       return it_->first;
     }
-    // TODO: remove prfix Get from names of methods
-    OrderType GetOrder() const noexcept {
+
+    OrderType Order() const noexcept {
       return it_->second;
     }
 
    private:
     OrderType::Side side_;
-    MapOrdersIter it_;
+    MapOrdersIterType it_;
   };
-  // TODO: remove prefix Get from names of methods
-  MapOrders& GetMapOrders(OrderType::Side side) {
+
+  MapOrdersType& MapOrders(OrderType::Side side) {
     return order_side_to_map_orders_[side];
   }
 
-  OrderStorageKey GenerateKey(const OrderType& order) const {
-    return OrderStorageKey(order);
+  void MoveMapOrderIter(MapOrdersIterType& iter) {
+    iter = (iter->second.IsCompleted()) ? Delete(iter) : std::next(iter);
   }
 
-  MapOrdersIter Delete(MapOrdersIter iter) {
-    order_id_to_location_.erase(iter->second.GetId());
-    return GetMapOrders(iter->second.GetDetails().side).erase(iter);
+  void MoveMapOrderReverseIter(MapOrdersReverseIterType& r_iter) {
+    r_iter = (r_iter->second.IsCompleted())
+                 ? std::make_reverse_iterator(Delete(std::prev(r_iter.base())))
+                 : std::next(r_iter);
+  }
+
+  StorageKey GenerateKey(const OrderType& order) const {
+    return StorageKey(order);
+  }
+
+  MapOrdersIterType Delete(MapOrdersIterType iter) {
+    order_id_to_location_.erase(iter->second.Id());
+    return MapOrders(iter->second.Details().Side()).erase(iter);
   }
 
  private:
-  OrderIdToLocation order_id_to_location_;
+  OrderIDToLocation order_id_to_location_;
   OrderSideToMapOrders order_side_to_map_orders_;
 };
 
@@ -165,10 +176,10 @@ class DealStorage {
   DealStorage() = default;
 
   void Add(DealType deal) {
-    deal_id_to_deal_.emplace(deal.GetId(), std::move(deal));
+    deal_id_to_deal_.emplace(deal.Id(), std::move(deal));
   }
 
-  std::optional<DealType> Get(DealType::Id id) const {
+  std::optional<DealType> Get(DealType::ID id) const {
     if (auto it = deal_id_to_deal_.find(id); it != deal_id_to_deal_.end()) {
       return it->second;
     }
@@ -176,10 +187,10 @@ class DealStorage {
   }
 
  private:
-  using DealIdToDeal = std::unordered_map<typename DealType::Id, DealType>;
+  using DealIDToDeal = std::unordered_map<typename DealType::ID, DealType>;
 
  private:
-  DealIdToDeal deal_id_to_deal_;
+  DealIDToDeal deal_id_to_deal_;
 };
 
 }  // namespace details
@@ -199,7 +210,7 @@ class DefaultStorage : public IStorage<TargetCurrency, PaymentCurrency> {
     order_storage_.Add(std::move(order));
   }
 
-  std::optional<OrderType> GetOrder(OrderType::Id id) const override {
+  std::optional<OrderType> GetOrder(OrderType::ID id) const override {
     return order_storage_.Get(id);
   }
 
@@ -207,11 +218,11 @@ class DefaultStorage : public IStorage<TargetCurrency, PaymentCurrency> {
     deal_storage_.Add(std::move(deal));
   };
 
-  std::optional<DealType> GetDeal(DealType::Id id) const override {
+  std::optional<DealType> GetDeal(DealType::ID id) const override {
     return deal_storage_.Get(id);
   }
 
-  void FindOrderMatches() override {
+  void FindMatchingOrders() override {
     order_storage_.FindMatches();
   }
 

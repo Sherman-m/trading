@@ -7,9 +7,9 @@
 namespace trading {
 
 template <typename TargetCurrency, typename PaymentCurrency>
-class Deal {
+class Deal : public deal_details::DealBase {
  public:
-  using Id = deal_details::DealBase::Id;
+  using ID = deal_details::DealBase::ID;
   using Side = deal_details::DealSide;
   using PartType = deal_details::DealPart<TargetCurrency, PaymentCurrency>;
   using PartsType = std::pair<PartType, PartType>;
@@ -20,34 +20,55 @@ class Deal {
   // using SegmentType = Segment<TargetCurrency, PaymentCurrency>;
 
  public:
-  explicit Deal(Id id, const OrderType::OrdersMatchingResultType& result)
+  explicit Deal(ID id, OrderType::MatchingType::Result result)
       : id_(id),
-        buyer_part_(result.BuyerPtr(), result.BuyerOrderId(), result.Diff(),
-                    result.Paid(), Side::kBuy),
-        seller_part_(result.SellerPtr(), result.SellerOrderId(), result.Diff(),
-                     result.Paid(), Side::kSale) {
+        buyer_seller_parts_(
+            PartType(result.BuyerPtr(), result.BuyerOrderId(), result.Diff(),
+                     result.Paid(), Side::kBuy),
+            PartType(result.SellerPtr(), result.SellerOrderId(), result.Diff(),
+                     result.Paid(), Side::kSale)) {
   }
 
-  Id GetId() const noexcept {
+  ID Id() const noexcept {
     return id_;
   }
-  const PartType& GetBuyerPart() const noexcept {
-    return buyer_part_;
+
+  const PartType& BuyerPart() const noexcept {
+    return buyer_seller_parts_.first;
   }
 
-  const PartType& GetSellerPart() const noexcept {
-    return seller_part_;
+  PartType& BuyerPart() noexcept {
+    return buyer_seller_parts_.first;
   }
 
-  const PartsType GetBuyerSellerParts() const noexcept {
-    return {buyer_part_, seller_part_};
+  const PartType& SellerPart() const noexcept {
+    return buyer_seller_parts_.second;
   }
+
+  PartType& SellerPart() noexcept {
+    return buyer_seller_parts_.second;
+  }
+
+  const PartsType& BuyerSellerParts() const noexcept {
+    return buyer_seller_parts_;
+  }
+
+  PartsType& BuyerSellerParts() noexcept {
+    return buyer_seller_parts_;
+  }
+
+  friend bool operator==(const Deal& first, const Deal& second) {
+    return first.id_ == second.id_ && first.buyer_part_ == second.buyer_part_ &&
+           first.seller_part_ == second.seller_part_;
+  }
+
+  friend auto operator<=>(const Deal& first, const Deal& second) = default;
 
  private:
-  Id id_;
-  PartType buyer_part_;
-  PartType seller_part_;
+  ID id_;
+  PartsType buyer_seller_parts_;
 };
+
 }  // namespace trading
 
 #endif

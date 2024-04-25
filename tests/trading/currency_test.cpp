@@ -2,7 +2,11 @@
 
 #include "../../src/trading/currency.hpp"
 
+namespace currency_test {
+
 using namespace trading::currencies;
+
+/*------------------------------------------------------------tests---------------------------------------------------------------*/
 
 TEST(CurrencyOperators, LvalueAddCurrency) {
   Usd u1(100);
@@ -59,3 +63,5 @@ TEST(CurrencyValue, NegativeValue) {
   u1 -= u2;
   ASSERT_EQ(u1, -u2);
 }
+
+}  // namespace currency_test

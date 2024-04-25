@@ -17,13 +17,14 @@ class IStorage {
 
  public:
   virtual ~IStorage() = default;
+
   virtual void AddOrder(OrderType order) = 0;
-  virtual std::optional<OrderType> GetOrder(OrderType::Id id) const = 0;
+  virtual std::optional<OrderType> GetOrder(OrderType::ID id) const = 0;
 
   virtual void AddDeal(DealType deal) = 0;
-  virtual std::optional<DealType> GetDeal(DealType::Id id) const = 0;
+  virtual std::optional<DealType> GetDeal(DealType::ID id) const = 0;
 
-  virtual void FindOrderMatches() = 0;
+  virtual void FindMatchingOrders() = 0;
 };
 
 }  // namespace storages

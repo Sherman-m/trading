@@ -23,37 +23,9 @@ class TaggedNumeric : public Tagged<Numeric, Tag> {
     return *this;
   }
 
-  const TaggedNumeric operator+(const TaggedNumeric& other) const noexcept {
-    TaggedNumeric result(*this);
-    result += other;
-    return result;
-  }
-
-  const TaggedNumeric operator+() const noexcept {
-    TaggedNumeric result(this->value_);
-    return result;
-  }
-
-  const TaggedNumeric operator-(const TaggedNumeric& other) const noexcept {
-    TaggedNumeric result(*this);
-    result -= other;
-    return result;
-  }
-
-  const TaggedNumeric operator-() const noexcept {
-    TaggedNumeric result(this->value_ * -1);
-    return result;
-  }
-
   TaggedNumeric& operator*=(int64_t num) & noexcept {
     this->value_ *= num;
     return *this;
-  }
-
-  const TaggedNumeric operator*(int64_t num) const noexcept {
-    TaggedNumeric result(*this);
-    result *= num;
-    return result;
   }
 
   TaggedNumeric& operator/=(int64_t num) & noexcept {
@@ -61,17 +33,53 @@ class TaggedNumeric : public Tagged<Numeric, Tag> {
     return *this;
   }
 
-  const TaggedNumeric operator/(int64_t num) const noexcept {
-    TaggedNumeric result(*this);
-    result /= num;
-    return result;
+  const TaggedNumeric operator+() const noexcept {
+    return TaggedNumeric(this->value_);
+  }
+
+  const TaggedNumeric operator-() const noexcept {
+    return TaggedNumeric(this->value_ * -1);
   }
 };
+
+template <typename Numeric, typename Tag>
+const TaggedNumeric<Numeric, Tag> operator+(
+    const TaggedNumeric<Numeric, Tag>& first,
+    const TaggedNumeric<Numeric, Tag>& second) {
+  TaggedNumeric<Numeric, Tag> result(first);
+  result += second;
+  return result;
+}
+
+template <typename Numeric, typename Tag>
+const TaggedNumeric<Numeric, Tag> operator-(
+    const TaggedNumeric<Numeric, Tag>& first,
+    const TaggedNumeric<Numeric, Tag>& second) {
+  TaggedNumeric<Numeric, Tag> result(first);
+  result -= second;
+  return result;
+}
+
+template <typename Numeric, typename Tag>
+const TaggedNumeric<Numeric, Tag> operator*(
+    const TaggedNumeric<Numeric, Tag>& tagged_num, int64_t num) {
+  TaggedNumeric<Numeric, Tag> result(tagged_num);
+  result *= num;
+  return result;
+}
 
 template <typename Numeric, typename Tag>
 const TaggedNumeric<Numeric, Tag> operator*(
     int64_t num, const TaggedNumeric<Numeric, Tag>& tagged_num) {
   return tagged_num * num;
+}
+
+template <typename Numeric, typename Tag>
+const TaggedNumeric<Numeric, Tag> operator/(
+    const TaggedNumeric<Numeric, Tag>& tagged_num, int64_t num) {
+  TaggedNumeric<Numeric, Tag> result(tagged_num);
+  result /= num;
+  return result;
 }
 
 template <typename Numeric, typename Tag>

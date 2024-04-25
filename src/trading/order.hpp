@@ -16,38 +16,36 @@ class Order : public order_details::OrderBase {
   friend class OrdersMatching<TargetCurrency, PaymentCurrency>;
 
  public:
-  using Id = order_details::OrderBase::Id;
+  using ID = order_details::OrderBase::ID;
   using Side = order_details::OrderSide;
   using DetailsType =
       order_details::OrderDetails<TargetCurrency, PaymentCurrency>;
 
-  // TODO: remove Orders from names
-  using OrdersMatchingType = OrdersMatching<TargetCurrency, PaymentCurrency>;
-  using OrdersMatchingResultType = OrdersMatchingType::Result;
+  using MatchingType = OrdersMatching<TargetCurrency, PaymentCurrency>;
 
   // TODO: after implementation Segment class
   // using SegmentType = Segment<TargetCurrency, PaymentCurrency>;
 
  public:
-  explicit Order(Id id, DetailsType details_)
+  explicit Order(ID id, DetailsType details)
       : id_(id),
-        details_(std::move(details_)) {
+        details_(std::move(details)) {
   }
-  // TODO: remove prfix Get from names of methods
-  Id GetId() const noexcept {
+
+  ID Id() const noexcept {
     return id_;
   }
-  // TODO: rename to Details
-  const DetailsType& GetDetails() const noexcept {
+
+  const DetailsType& Details() const noexcept {
     return details_;
   }
-  // TODO: rename to Details
-  DetailsType& GetDetails() noexcept {
+
+  DetailsType& Details() noexcept {
     return details_;
   }
 
   bool IsCompleted() const noexcept {
-    return details_.num_units == 0;
+    return details_.NumUnits() == 0;
   }
 
   friend bool operator==(const Order& first, const Order& second) {
@@ -57,11 +55,10 @@ class Order : public order_details::OrderBase {
   friend auto operator<=>(const Order&, const Order&) = default;
 
  private:
-  Id id_;
+  ID id_;
   DetailsType details_;
 };
 
-// TODO: remove freindship with Order class and use methods of Order class
 template <typename TargetCurrency, typename PaymentCurrency>
 class OrdersMatching {
  public:
@@ -70,33 +67,39 @@ class OrdersMatching {
   class Result {
    public:
     explicit Result(OrderType& buy_order, OrderType& sale_order) {
-      if (!DoOrdersMatch(buy_order, sale_order)) {
+      if (!DoMatch(buy_order, sale_order)) {
         throw std::runtime_error("Do not matching orders");
       }
 
-      if (buy_order.details_.side == OrderType::Side::kSale &&
-          sale_order.details_.side == OrderType::Side::kBuy) {
+      if (buy_order.details_.side_ == OrderType::Side::kSale &&
+          sale_order.details_.side_ == OrderType::Side::kBuy) {
         Init(sale_order, buy_order);
       } else {
         Init(buy_order, sale_order);
       }
     }
 
-    friend auto operator<=>(const Result&, const Result&) = default;
-
-    MarketMember* BuyerPtr() const noexcept {
+    const MarketMember* BuyerPtr() const noexcept {
       return buyer_seller_ptrs_.first;
     }
 
-    MarketMember* SellerPtr() const noexcept {
+    MarketMember* BuyerPtr() noexcept {
+      return buyer_seller_ptrs_.first;
+    }
+
+    const MarketMember* SellerPtr() const noexcept {
       return buyer_seller_ptrs_.second;
     }
 
-    OrderType::Id BuyerOrderId() const noexcept {
+    MarketMember* SellerPtr() noexcept {
+      return buyer_seller_ptrs_.second;
+    }
+
+    OrderType::ID BuyerOrderId() const noexcept {
       return buyer_seller_orders_id_.first;
     }
 
-    OrderType::Id SellerOrderId() const noexcept {
+    OrderType::ID SellerOrderId() const noexcept {
       return buyer_seller_orders_id_.second;
     }
 
@@ -108,53 +111,51 @@ class OrdersMatching {
       return paid_;
     }
 
+    friend auto operator<=>(const Result&, const Result&) = default;
+
    private:
     void Init(OrderType& buy_order, OrderType& sale_order) {
-      buyer_seller_ptrs_ = {buy_order.details_.market_member_ptr,
-                            sale_order.details_.market_member_ptr};
+      buyer_seller_ptrs_ = {buy_order.details_.market_member_ptr_,
+                            sale_order.details_.market_member_ptr_};
       buyer_seller_orders_id_ = {buy_order.id_, sale_order.id_};
 
-      diff_ =
-          std::min(buy_order.details_.num_units, sale_order.details_.num_units);
-      paid_ = diff_ * buy_order.details_.unit_price;
+      diff_ = std::min(buy_order.details_.num_units_,
+                       sale_order.details_.num_units_);
+      paid_ = diff_ * buy_order.details_.unit_price_;
 
-      buy_order.details_.num_units -= diff_;
-      sale_order.details_.num_units -= diff_;
+      buy_order.details_.num_units_ -= diff_;
+      sale_order.details_.num_units_ -= diff_;
     }
 
    private:
     using BuyerSellerPtrs = std::pair<MarketMember*, MarketMember*>;
-    using BuyerSellerOrdersId =
-        std::pair<typename OrderType::Id, typename OrderType::Id>;
+    using BuyerSellerOrdersID =
+        std::pair<typename OrderType::ID, typename OrderType::ID>;
 
     BuyerSellerPtrs buyer_seller_ptrs_;
-    BuyerSellerOrdersId buyer_seller_orders_id_;
+    BuyerSellerOrdersID buyer_seller_orders_id_;
     size_t diff_;
     PaymentCurrency paid_;
   };
 
-  // TODO: rename to DoMatch
-  static bool DoOrdersMatch(const OrderType& buy_order,
-                            const OrderType& sale_order) {
-    if (buy_order.details_.side == OrderType::Side::kSale &&
-        sale_order.details_.side == OrderType::Side::kBuy) {
-      return DoOrdersMatch(sale_order, buy_order);
+  static bool DoMatch(const OrderType& buy_order, const OrderType& sale_order) {
+    if (buy_order.details_.side_ == OrderType::Side::kSale &&
+        sale_order.details_.side_ == OrderType::Side::kBuy) {
+      return DoMatch(sale_order, buy_order);
     }
-    return (buy_order.details_.market_member_ptr !=
-            sale_order.details_.market_member_ptr) &&
-           (buy_order.details_.side != sale_order.details_.side) &&
-           (buy_order.details_.num_units <= sale_order.details_.num_units) &&
-           (buy_order.details_.unit_price >= sale_order.details_.unit_price);
+    return (buy_order.details_.market_member_ptr_ !=
+            sale_order.details_.market_member_ptr_) &&
+           (buy_order.details_.side_ != sale_order.details_.side_) &&
+           (buy_order.details_.unit_price_ >= sale_order.details_.unit_price_);
   }
 
-  // TODO: rename to Match
-  static const Result MatchOrders(OrderType& buy_order, OrderType& sale_order) {
-    if (buy_order.details_.side == OrderType::Side::kSale &&
-        sale_order.details_.side == OrderType::Side::kBuy) {
-      return MatchOrders(sale_order, buy_order);
+  static Result Match(OrderType& buy_order, OrderType& sale_order) {
+    if (buy_order.details_.side_ == OrderType::Side::kSale &&
+        sale_order.details_.side_ == OrderType::Side::kBuy) {
+      return Match(sale_order, buy_order);
     }
 
-    if (!DoOrdersMatch(buy_order, sale_order)) {
+    if (!DoMatch(buy_order, sale_order)) {
       throw std::runtime_error("Orders don't match");
     }
 

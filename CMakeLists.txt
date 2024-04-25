@@ -7,6 +7,22 @@ find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
 find_package(GTest REQUIRED)
 set(link_libs Threads::Threads Boost::context)
+set(use_sanitizers ON)
+
+if (use_sanitizers)
+  add_compile_options(
+    -g
+    -fsanitize=address
+    -fsanitize=undefined
+    -fsanitize=leak)
+
+  add_link_options(
+    -g
+    -fsanitize=address
+    -fsanitize=undefined
+    -fsanitize=leak
+  )
+endif()
 
 # connecting auxiliary scripts.
 include(cmake/Helpers.cmake)
