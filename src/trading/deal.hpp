@@ -16,8 +16,7 @@ class Deal : public deal_details::DealBase {
 
   using OrderType = Order<TargetCurrency, PaymentCurrency>;
 
-  // TODO: add after implementation Segment class
-  // using SegmentType = Segment<TargetCurrency, PaymentCurrency>;
+  using SegmentType = Segment<TargetCurrency, PaymentCurrency>;
 
  public:
   explicit Deal(ID id, OrderType::MatchingType::Result result)

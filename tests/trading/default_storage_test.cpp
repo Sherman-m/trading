@@ -18,10 +18,9 @@ class CommonForDefaultStorageTest : public testing::Test {
   using TargetCurrency = Usd;
   using PaymentCurrency = Rubles;
 
-  using OrderType = Order<TargetCurrency, PaymentCurrency>;
-  using DealType = Deal<TargetCurrency, PaymentCurrency>;
-
   using DefaultStorageType = DefaultStorage<TargetCurrency, PaymentCurrency>;
+  using OrderType = DefaultStorageType::OrderType;
+  using DealType = DefaultStorageType::DealType;
 
   MarketMember mm_1_{0};
   MarketMember mm_2_{1};
@@ -207,7 +206,9 @@ TEST_F(DefaultStorageTestOrders, MultipleOrders) {
   ASSERT_EQ(storage_.GetOrder(sale_order_50_for_50_.Id()),
             sale_order_50_for_50_);
 }
-//  TODO: redesign tests for Deals after implementation TradingPlatform
+
+//  TODO: redesign tests for Deals after implementation TradingPlatform and
+//  Segment
 //    1. TradingPlatform generates deal and adds this to Segment storage
 //    2. Need to add a field about Deal to fields of test classes and compare
 //    it with deal stored into Storage

@@ -6,10 +6,16 @@ SET(CMAKE_CXX_STANDARD 20)
 find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
 find_package(GTest REQUIRED)
-set(link_libs Threads::Threads Boost::context)
-set(use_sanitizers ON)
+set(link_libs 
+  Threads::Threads 
+  Boost::timer
+  Boost::context
+  Boost::system)
 
-if (use_sanitizers)
+# using santizers
+set(USE_SANITIZERS ON)
+
+if (USE_SANITIZERS)
   add_compile_options(
     -g
     -fsanitize=address

@@ -31,7 +31,7 @@ macro(generate_test_targets name_headers name_sources)
   add_executable(${current_dir}_test ${test_files} ${common_modules} ${${current_dir}_module})
   target_link_libraries(${current_dir}_test 
     PRIVATE 
-    Threads::Threads
+    ${link_libs}
     gtest::gtest)
 endmacro()
 

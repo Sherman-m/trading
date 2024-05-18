@@ -10,7 +10,9 @@ set(headers
   deal
   deal_fwd
   storage
-  default_storage)
+  default_storage
+  segment
+  segment_analyzer)
 
 set(sources
   wallet

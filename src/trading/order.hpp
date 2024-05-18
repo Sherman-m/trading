@@ -23,8 +23,7 @@ class Order : public order_details::OrderBase {
 
   using MatchingType = OrdersMatching<TargetCurrency, PaymentCurrency>;
 
-  // TODO: after implementation Segment class
-  // using SegmentType = Segment<TargetCurrency, PaymentCurrency>;
+  using SegmentType = Segment<TargetCurrency, PaymentCurrency>;
 
  public:
   explicit Order(ID id, DetailsType details)
