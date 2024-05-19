@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include "order_details.hpp"
+#include "segment_fwd.hpp"
 
 namespace trading {
 

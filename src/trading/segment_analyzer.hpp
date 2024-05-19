@@ -26,11 +26,10 @@ class SegmentAnalyzer
   using HandlerType = std::function<void()>;
 
  public:
-  explicit SegmentAnalyzer(net::io_context& ioc, Milliseconds period,
-                           HandlerType&& handler)
+  explicit SegmentAnalyzer(net::io_context& ioc, Milliseconds period)
       : timer_(ioc),
         period_(period),
-        handler_(std::move(handler)) {
+        handler_(std::bind(&SegmentAnalyzer::DefaultHandler, this)) {
   }
 
   SegmentAnalyzer(const SegmentAnalyzer&) = delete;
@@ -39,9 +38,14 @@ class SegmentAnalyzer
   SegmentAnalyzer(SegmentAnalyzer&&) = default;
   SegmentAnalyzer& operator=(SegmentAnalyzer&&) = default;
 
-  void Start() {
+  void Start(HandlerType handler) {
+    handler_ = std::move(handler);
     last_tick_ = Clock::now();
     ScheduleTick();
+  }
+
+  void Stop() {
+    handler_ = std::bind(&SegmentAnalyzer::DefaultHandler, this);
   }
 
  private:
@@ -58,6 +62,10 @@ class SegmentAnalyzer
       handler_();
       ScheduleTick();
     }
+  }
+
+  void DefaultHandler() {
+    // Do nothing
   }
 
  private:

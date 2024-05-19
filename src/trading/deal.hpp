@@ -3,6 +3,7 @@
 
 #include "deal_details.hpp"
 #include "order.hpp"
+#include "segment_fwd.hpp"
 
 namespace trading {
 

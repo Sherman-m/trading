@@ -6,6 +6,7 @@
 #include "wallet.hpp"
 #include "order_details.hpp"
 #include "deal_details.hpp"
+#include "trading_platform.hpp"
 
 namespace trading {
 
@@ -117,15 +118,14 @@ class MarketMember {
     wallet_.TopUp<Currency>(num_currency_units);
   }
 
-  // TODO: after implementation TardingPlatform
   template <typename TargetCurrency, typename PaymentCurrency>
   OrderID MakeOrder(size_t num_units, PaymentCurrency unit_price,
                     OrderSide order_side) {
     OrderDetails<TargetCurrency, PaymentCurrency> order_details(
         this, num_units, unit_price, order_side);
-    // OrderId order_id =
-    // Trading::Get()->PublishOrder(std::move(order_details));
-    return /*order_id*/ 0;
+    return TradingPlatformScope::Get()
+        ->PublishOrder<TargetCurrency, PaymentCurrency>(
+            std::move(order_details));
   }
 
  private:

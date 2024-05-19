@@ -6,6 +6,7 @@
 #include "order.hpp"
 #include <map>
 #include <unordered_map>
+#include "trading_platform.hpp"
 
 namespace trading {
 
@@ -64,8 +65,9 @@ class OrderStorage {
           auto matching_res = OrderMatchingType::Match(buy_order_it->second,
                                                        sale_order_it->second);
 
-          // TODO: after implementation TradingPlatform
-          // TradingPlatform::Get()->CloseDeal(std::move(matching_res));
+          TradingPlatformScope::Get()
+              ->CloseDeal<TargetCurrency, PaymentCurrency>(
+                  std::move(matching_res));
         }
 
         if (sale_order_it->second.IsCompleted()) {

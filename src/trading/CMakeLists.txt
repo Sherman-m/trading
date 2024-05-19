@@ -12,11 +12,15 @@ set(headers
   storage
   default_storage
   segment
-  segment_analyzer)
+  segment_analyzer
+  segment_fwd
+  trading_platform
+  trading)
 
 set(sources
   wallet
   market_member
+  trading_platform
   )
 
 prepare_sources("${headers}" "${sources}")
