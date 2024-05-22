@@ -3,13 +3,14 @@
 
 #include <tuple>
 #include <type_traits>
+
 #include "currency.hpp"
 
 namespace trading {
 
 class Wallet {
  public:
-  using BalanceType = currencies::TypesCurrencies;
+  using BalanceType = currencies::TupleCurrencyTypes;
 
  public:
   Wallet() = default;
@@ -25,36 +26,26 @@ class Wallet {
 
   template <typename Currency,
             std::enable_if_t<!std::is_arithmetic_v<Currency>, bool> = true>
-  void TopUp(const Currency& amount) {
-    auto& currency_balance = std::get<Currency>(balance_);
-    currency_balance += amount;
-  }
+  void TopUp(const Currency& amount);
 
   template <typename Currency>
   void TopUp(size_t num_units,
-             const std::type_identity_t<Currency>& currency_type = Currency()) {
-    auto& currency_balance = std::get<Currency>(balance_);
-    currency_balance += Currency(num_units);
-  }
+             const std::type_identity_t<Currency>& currency_type = Currency());
 
   template <typename Currency,
             std::enable_if_t<!std::is_arithmetic_v<Currency>, bool> = true>
-  void Withdraw(const Currency& amount) {
-    auto& currency_balance = std::get<Currency>(balance_);
-    currency_balance -= amount;
-  }
+  void Withdraw(const Currency& amount);
 
   template <typename Currency>
   void Withdraw(
       size_t num_units,
-      const std::type_identity_t<Currency>& currency_type = Currency()) {
-    auto& currency_balance = std::get<Currency>(balance_);
-    currency_balance -= Currency(num_units);
-  }
+      const std::type_identity_t<Currency>& currency_type = Currency());
 
  private:
   BalanceType balance_;
 };
 }  // namespace trading
+
+#include "impl/wallet_impl.hpp"
 
 #endif

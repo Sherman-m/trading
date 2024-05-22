@@ -1,12 +1,16 @@
+#include "../../src/util/custom_type_traits.hpp"
+
 #include <gtest/gtest.h>
 
 #include <string>
-#include <type_traits>
 #include <tuple>
-#include "../../src/util/custom_type_traits.hpp"
+#include <type_traits>
+
+namespace custom_type_traits_test {
 
 using namespace util::custom_type_traits;
 
+/*-----------------------------------------tuple_types_cat_test------------------------------------------------*/
 class TupleTypesCat : public testing::Test {
  protected:
   using TupleTypes1 = std::tuple<int, double>;
@@ -46,7 +50,7 @@ class TupleTypes : public testing::Test {
   };
 };
 
-/*--------------------------------------using_with_object_with_one_template_arguments-----------------------------*/
+/*----------------------------------using_with_object_with_one_template_arguments------------------------------*/
 class TupleObj1ArgFromTypes : public TupleTypes {
  protected:
   template <typename Arg>
@@ -87,7 +91,7 @@ TEST_F(TupleObj1ArgFromTypes, BadExpectedTupleType4Size) {
   ASSERT_FALSE(result);
 }
 
-/*--------------------------------------using_with_object_with_two_template_arguments-----------------------------*/
+/*----------------------------------using_with_object_with_two_template_arguments------------------------------*/
 class TupleObj2ArgsFromTypes : public TupleTypes {
  protected:
   template <typename Arg1, typename Arg2>
@@ -142,7 +146,7 @@ TEST_F(TupleObj2ArgsFromTypes, BadExpectedTupleType4Size) {
   ASSERT_FALSE(result);
 }
 
-/*-------------using_with_object_with_three_template_arguments_where_one_of_them_is_template_template_parameter---*/
+/*---------using_with_object_with_three_template_arguments_where_one_of_them_is_template_template_parameter----*/
 class TupleObjWithTTParams : public TupleObj2ArgsFromTypes {
  protected:
   template <typename Arg1, typename Arg2,
@@ -216,3 +220,18 @@ TEST_F(TupleObjWithTTParams, BadExpectedTupleType4Size) {
   constexpr bool result = std::is_same_v<TupleTypeResult, Expected>;
   ASSERT_FALSE(result);
 }
+
+/*---------------------------------------construct_tuple_from_same_args0---------------------------------------*/
+class ConstructTypleFromSameArgs : public testing::Test {
+ protected:
+  using TupleType = std::tuple<std::string, std::string, std::string>;
+
+  TupleType expected_result{std::make_tuple("a", "a", "a")};
+};
+
+TEST_F(ConstructTypleFromSameArgs, CheckingConstructionTuple) {
+  auto result = construct_tuple_from_same_args<TupleType>("a");
+  ASSERT_EQ(result, expected_result);
+}
+
+}  // namespace custom_type_traits_test

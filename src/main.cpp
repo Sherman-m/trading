@@ -1,9 +1,9 @@
-#include <iostream>
-#include "trading/trading.hpp"
-
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <chrono>
+#include <iostream>
+
+#include "trading/trading.hpp"
 
 using namespace std::chrono_literals;
 using namespace trading;
@@ -32,7 +32,7 @@ int main() {
   MarketMember mm1{1};
   MarketMember mm2{2};
 
-  mm1.BuyCurrency<currencies::Usd>(30ul, currencies::Rubles(50));
+  mm1.BuyCurrency<currencies::Usd, currencies::Rubles>(30ul, 50);
 
   mm2.SaleCurrency<currencies::Usd>(40ul, currencies::Rubles(40));
 

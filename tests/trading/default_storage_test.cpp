@@ -1,9 +1,11 @@
+#include "../../src/trading/default_storage.hpp"
+
 #include <gtest/gtest.h>
+
 #include <cinttypes>
 
-#include "../../src/trading/market_member.hpp"
-#include "../../src/trading/default_storage.hpp"
 #include "../../src/trading/currency.hpp"
+#include "../../src/trading/market_member.hpp"
 
 namespace default_storage_test {
 
@@ -11,8 +13,7 @@ using namespace trading;
 using namespace currencies;
 using namespace storages;
 
-/*------------------------------------------------------------common--------------------------------------------------------------*/
-
+/*-----------------------------------------------comon---------------------------------------------------------*/
 class CommonForDefaultStorageTest : public testing::Test {
  protected:
   using TargetCurrency = Usd;
@@ -41,8 +42,7 @@ class CommonForDefaultStorageTest : public testing::Test {
 CommonForDefaultStorageTest::OrderType::ID
     CommonForDefaultStorageTest::order_id = 0;
 
-/*------------------------------------------------------------MM1-----------------------------------------------------------------*/
-
+/*------------------------------------------------MM1----------------------------------------------------------*/
 class SaleOrdersMM1 : virtual public CommonForDefaultStorageTest {
  protected:
   OrderType sale_order_30_for_50_{
@@ -62,8 +62,7 @@ class SaleOrdersMM1 : virtual public CommonForDefaultStorageTest {
                                          sale_side_}};
 };
 
-/*------------------------------------------------------------MM2-----------------------------------------------------------------*/
-
+/*------------------------------------------------MM2----------------------------------------------------------*/
 class BuyOrdersMM2 : virtual public CommonForDefaultStorageTest {
  protected:
   OrderType buy_order_30_for_50_{
@@ -79,8 +78,7 @@ class BuyOrdersMM2 : virtual public CommonForDefaultStorageTest {
       OrderType::DetailsType{&mm_2_, num_units_50_, unit_price_50_, buy_side_}};
 };
 
-/*------------------------------------------------------------tests---------------------------------------------------------------*/
-
+/*-----------------------------------------------tests---------------------------------------------------------*/
 class DefaultStorageTestOrders : public SaleOrdersMM1,
                                  public BuyOrdersMM2 {
  protected:

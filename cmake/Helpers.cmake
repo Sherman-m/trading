@@ -19,6 +19,7 @@ macro(prepare_sources name_headers name_sources)
   get_filename_component(current_dir ${CMAKE_CURRENT_LIST_DIR} NAME)
 
   collect_files("${name_headers}" "${name_sources}" ${current_dir})
+  list(APPEND ${current_dir} ${impl})
   set(${current_dir} ${${current_dir}} PARENT_SCOPE)
 endmacro()
 

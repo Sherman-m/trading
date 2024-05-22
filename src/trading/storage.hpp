@@ -1,19 +1,20 @@
 #ifndef STORAGE_HPP
 #define STORAGE_HPP
 
-#include "order_fwd.hpp"
-#include "deal_fwd.hpp"
 #include <optional>
+
+#include "deal_fwd.hpp"
+#include "order_fwd.hpp"
 
 namespace trading {
 
 namespace storages {
 
-template <typename TargetCurrency, typename PaymentCurrency>
+template <typename Order, typename Deal>
 class IStorage {
  public:
-  using OrderType = Order<TargetCurrency, PaymentCurrency>;
-  using DealType = Deal<TargetCurrency, PaymentCurrency>;
+  using OrderType = Order;
+  using DealType = Deal;
 
  public:
   virtual ~IStorage() = default;

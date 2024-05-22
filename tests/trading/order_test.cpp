@@ -1,8 +1,9 @@
+#include "../../src/trading/order.hpp"
+
 #include <gtest/gtest.h>
 
-#include "../../src/trading/market_member.hpp"
-#include "../../src/trading/order.hpp"
 #include "../../src/trading/currency.hpp"
+#include "../../src/trading/market_member.hpp"
 
 namespace order_test {
 
@@ -10,8 +11,7 @@ using namespace trading;
 using namespace order_details;
 using namespace currencies;
 
-/*------------------------------------------------------------Common--------------------------------------------------------------*/
-
+/*-----------------------------------------------common--------------------------------------------------------*/
 class CommonForOrderTest : public testing::Test {
  protected:
   using TargetCurrency = Usd;
@@ -39,7 +39,7 @@ class CommonForOrderTest : public testing::Test {
 
 CommonForOrderTest::OrderType::ID CommonForOrderTest::order_id = 0;
 
-/*------------------------------------------------------------MM1-----------------------------------------------------------------*/
+/*------------------------------------------------MM1----------------------------------------------------------*/
 
 class SaleOrdersMM1 : virtual public CommonForOrderTest {
  protected:
@@ -63,8 +63,7 @@ class BuyOrdersMM1 : virtual public CommonForOrderTest {
       OrderType::DetailsType{&mm_1_, num_units_50_, unit_price_90_, buy_side_}};
 };
 
-/*------------------------------------------------------------MM2-----------------------------------------------------------------*/
-
+/*------------------------------------------------MM2----------------------------------------------------------*/
 class BuyOrdersMM2 : virtual public CommonForOrderTest {
  protected:
   OrderType buy_order_50_for_90_{
@@ -83,8 +82,7 @@ class SaleOrdersMM2 : virtual public CommonForOrderTest {
                                          sale_side_}};
 };
 
-/*------------------------------------------------------------tests---------------------------------------------------------------*/
-
+/*-----------------------------------------------tests---------------------------------------------------------*/
 class TwoOrdersWithSameSide : public SaleOrdersMM1,
                               public SaleOrdersMM2 {};
 

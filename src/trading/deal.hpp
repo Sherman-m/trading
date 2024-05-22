@@ -2,32 +2,30 @@
 #define DEAL_HPP
 
 #include "deal_details.hpp"
-#include "order.hpp"
+#include "order_fwd.hpp"
+#include "orders_matching_fwd.hpp"
 #include "segment_fwd.hpp"
 
 namespace trading {
 
-template <typename TargetCurrency, typename PaymentCurrency>
+template <typename Order>
 class Deal : public deal_details::DealBase {
  public:
-  using ID = deal_details::DealBase::ID;
-  using Side = deal_details::DealSide;
-  using PartType = deal_details::DealPart<TargetCurrency, PaymentCurrency>;
+  using BaseType = deal_details::DealBase;
+  using ID = BaseType::ID;
+
+  using OrderType = Order;
+
+  using TargetCurrencyType = OrderType::TargetCurrencyType;
+  using PaymentCurrencyType = OrderType::PaymentCurrencyType;
+
+  using PartType = deal_details::DealPart<Deal>;
   using PartsType = std::pair<PartType, PartType>;
 
-  using OrderType = Order<TargetCurrency, PaymentCurrency>;
-
-  using SegmentType = Segment<TargetCurrency, PaymentCurrency>;
+  using SegmentType = Order::SegmentType;
 
  public:
-  explicit Deal(ID id, OrderType::MatchingType::Result result)
-      : id_(id),
-        buyer_seller_parts_(
-            PartType(result.BuyerPtr(), result.BuyerOrderId(), result.Diff(),
-                     result.Paid(), Side::kBuy),
-            PartType(result.SellerPtr(), result.SellerOrderId(), result.Diff(),
-                     result.Paid(), Side::kSale)) {
-  }
+  explicit Deal(ID id, OrderType::MatchingType::Result result);
 
   ID Id() const noexcept {
     return id_;
@@ -70,5 +68,7 @@ class Deal : public deal_details::DealBase {
 };
 
 }  // namespace trading
+
+#include "impl/deal_impl.hpp"
 
 #endif

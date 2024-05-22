@@ -1,13 +1,13 @@
 #ifndef SEGMENT_ANALYZER_HPP
 #define SEGMENT_ANALYZER_HPP
 
-#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
-
+#include <chrono>
+#include <functional>
 #include <memory>
 #include <utility>
-#include <chrono>
 
 namespace trading {
 
@@ -26,11 +26,7 @@ class SegmentAnalyzer
   using HandlerType = std::function<void()>;
 
  public:
-  explicit SegmentAnalyzer(net::io_context& ioc, Milliseconds period)
-      : timer_(ioc),
-        period_(period),
-        handler_(std::bind(&SegmentAnalyzer::DefaultHandler, this)) {
-  }
+  explicit SegmentAnalyzer(net::io_context& ioc, Milliseconds period);
 
   SegmentAnalyzer(const SegmentAnalyzer&) = delete;
   SegmentAnalyzer& operator=(const SegmentAnalyzer&) = delete;
@@ -38,35 +34,16 @@ class SegmentAnalyzer
   SegmentAnalyzer(SegmentAnalyzer&&) = default;
   SegmentAnalyzer& operator=(SegmentAnalyzer&&) = default;
 
-  void Start(HandlerType handler) {
-    handler_ = std::move(handler);
-    last_tick_ = Clock::now();
-    ScheduleTick();
-  }
+  void HandlerStart(HandlerType handler = DefaultHandler());
 
-  void Stop() {
-    handler_ = std::bind(&SegmentAnalyzer::DefaultHandler, this);
-  }
+  void HandlerStop();
 
  private:
-  void ScheduleTick() {
-    timer_.expires_after(period_);
-    timer_.async_wait([self = this->shared_from_this()](sys::error_code ec) {
-      self->OnTick(ec);
-    });
-  }
+  void ScheduleTick();
 
-  void OnTick(sys::error_code ec) {
-    if (!ec) {
-      last_tick_ = Clock::now();
-      handler_();
-      ScheduleTick();
-    }
-  }
+  void OnTick(sys::error_code ec);
 
-  void DefaultHandler() {
-    // Do nothing
-  }
+  void DefaultHandler();
 
  private:
   Timer timer_;
@@ -78,5 +55,7 @@ class SegmentAnalyzer
 }  // namespace segment_details
 
 }  // namespace trading
+
+#include "impl/segment_analyzer_impl.hpp"
 
 #endif

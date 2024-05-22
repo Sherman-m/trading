@@ -1,7 +1,9 @@
+#include "../../src/trading/market_member.hpp"
+
 #include <gtest/gtest.h>
 
 #include <tuple>
-#include "../../src/trading/market_member.hpp"
+
 #include "../../src/trading/wallet.hpp"
 
 namespace market_member_test {
@@ -9,8 +11,7 @@ namespace market_member_test {
 using namespace trading;
 using namespace currencies;
 
-/*------------------------------------------------------------tests---------------------------------------------------------------*/
-
+/*-----------------------------------------------tests---------------------------------------------------------*/
 class MarketMemberByDefault : public testing::Test {
  protected:
   MarketMember market_member_{0};

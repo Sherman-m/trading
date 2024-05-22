@@ -3,7 +3,7 @@
 
 namespace trading {
 
-template <typename TargetCurrency, typename PaymentCurrency>
+template <typename Order>
 class Deal;
 
 }  // namespace trading

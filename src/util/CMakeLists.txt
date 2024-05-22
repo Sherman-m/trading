@@ -1,3 +1,5 @@
+add_subdirectory(impl)
+
 set(headers
   tagged_numeric
   tagged

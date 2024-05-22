@@ -1,16 +1,17 @@
+#include "../../src/trading/deal.hpp"
+
 #include <gtest/gtest.h>
 
+#include "../../src/trading/currency.hpp"
 #include "../../src/trading/market_member.hpp"
 #include "../../src/trading/order.hpp"
-#include "../../src/trading/deal.hpp"
-#include "../../src/trading/currency.hpp"
 
 namespace deal_test {
 
 using namespace trading;
 using namespace order_details;
 using namespace currencies;
-/*------------------------------------------------------------common--------------------------------------------------------------*/
+/*----------------------------------------------common---------------------------------------------------------*/
 
 class CommonForDealTest : public testing::Test {
  protected:
@@ -27,7 +28,7 @@ class CommonForDealTest : public testing::Test {
   MarketMember mm_2_{1};
 };
 
-/*------------------------------------------------------------sale----------------------------------------------------------------*/
+/*-----------------------------------------------sale----------------------------------------------------------*/
 
 class SaleOrderDetails : virtual public CommonForDealTest {
  protected:
@@ -43,7 +44,7 @@ class SaleOrder : public SaleOrderDetails {
   OrderType sale_order_{id_, details_};
 };
 
-/*-------------------------------------------------------------buy----------------------------------------------------------------*/
+/*-----------------------------------------------buy-----------------------------------------------------------*/
 
 class BuyOrderDetails : virtual public CommonForDealTest {
  protected:
@@ -59,7 +60,7 @@ class BuyOrder : public BuyOrderDetails {
   OrderType buy_order_{id_, details_};
 };
 
-/*------------------------------------------------------------tests---------------------------------------------------------------*/
+/*----------------------------------------------tests----------------------------------------------------------*/
 
 class DealFromOrdersMatchingResult : public SaleOrder,
                                      public BuyOrder {

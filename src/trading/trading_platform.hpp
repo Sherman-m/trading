@@ -1,19 +1,21 @@
 #ifndef TRADING_PLATFORM_HPP
 #define TRADING_PLATFORM_HPP
 
-#include "currency.hpp"
-#include "segment.hpp"
-#include "order.hpp"
-#include "deal.hpp"
 #include <utility>
-#include "storage.hpp"
+
+#include "currency.hpp"
+#include "deal.hpp"
+#include "market_member_fwd.hpp"
+#include "order.hpp"
+#include "segment.hpp"
+#include "trading_side.hpp"
 
 namespace trading {
 
-/*------------------------------------------------TradingPlatformScopeFWD--------------------------------------------------------------*/
+/*-------------------------------------TradingPlatformScopeFWD-------------------------------------------------*/
 class TradingPlatformScope;
 
-/*--------------------------------------------------TradingPlatformImpl----------------------------------------------------------------*/
+/*---------------------------------------TradingPlatformImpl---------------------------------------------------*/
 namespace trading_platform_details {
 
 class TradingPlatformImpl {
@@ -24,29 +26,11 @@ class TradingPlatformImpl {
   using DealID = deal_details::DealBase::ID;
 
  public:
-  template <typename TargetCurrency, typename PaymentCurrency>
-  OrderID PublishOrder(
-      Order<TargetCurrency, PaymentCurrency>::DetailsType order_details) {
-    Order<TargetCurrency, PaymentCurrency> order(++next_order_id_,
-                                                 std::move(order_details));
-    std::get<typename Order<TargetCurrency, PaymentCurrency>::SegmentType>(
-        segments_)
-        .AddOrder(std::move(order));
-    return next_order_id_;
-  }
+  template <typename Order>
+  OrderID PublishOrder(Order::DetailsType order_details);
 
-  template <typename TargetCurrency, typename PaymentCurrency>
-  void CloseDeal(Order<TargetCurrency, PaymentCurrency>::MatchingType::Result
-                     matching_res) {
-    Deal<TargetCurrency, PaymentCurrency> deal(++next_deal_id_,
-                                               std::move(matching_res));
-    deal.BuyerPart().MarketMemberPtr()->CloseDealPart(deal.BuyerPart());
-    deal.SellerPart().MarketMemberPtr()->CloseDealPart(deal.SellerPart());
-
-    std::get<typename Deal<TargetCurrency, PaymentCurrency>::SegmentType>(
-        segments_)
-        .AddDeal(std::move(deal));
-  }
+  template <typename Deal>
+  void CloseDeal(Deal::OrderType::MatchingType::Result matching_res);
 
  private:
   template <typename TargetCurrency, typename PaymentCurrency>
@@ -55,10 +39,7 @@ class TradingPlatformImpl {
       currencies::TupleObj2ArgsFromCurrencyTypesT<SegmentTemplate>;
 
   template <template <typename, typename> typename Storage>
-  explicit TradingPlatformImpl(const SegmentConfig<Storage>& config)
-      : segments_(util::custom_type_traits::construct_tuple_from_same_args<
-                  TupleSegmentsType>(config)) {
-  }
+  explicit TradingPlatformImpl(const SegmentConfig<Storage>& config);
 
   ~TradingPlatformImpl() = default;
 
@@ -70,23 +51,35 @@ class TradingPlatformImpl {
 
 }  // namespace trading_platform_details
 
-/*-------------------------------------------------TradingPlatformScope----------------------------------------------------------------*/
+/*---------------------------------------TradingPlatformScope--------------------------------------------------*/
 class TradingPlatformScope {
  public:
-  template <template <typename, typename> typename Storage>
-  static void Run(const SegmentConfig<Storage>& config) {
-    static trading_platform_details::TradingPlatformImpl platform(config);
-    trading_platform_ptr_ = &platform;
-  }
+  using TradingPlatformImpl = trading_platform_details::TradingPlatformImpl;
 
-  static trading_platform_details::TradingPlatformImpl* Get();
+ public:
+  TradingPlatformScope() = delete;
+
+  TradingPlatformScope(const TradingPlatformScope&) = delete;
+  TradingPlatformScope& operator=(const TradingPlatformScope&) = delete;
+
+  TradingPlatformScope(TradingPlatformScope&&) = delete;
+  TradingPlatformScope& operator=(TradingPlatformScope&&) = delete;
+
+  ~TradingPlatformScope() = default;
+
+  template <template <typename, typename> typename Storage>
+  static void Run(const SegmentConfig<Storage>& config);
+
+  static TradingPlatformImpl* Get();
 
   static void Stop();
 
  private:
-  static trading_platform_details::TradingPlatformImpl* trading_platform_ptr_;
+  static TradingPlatformImpl* trading_platform_ptr_;
 };
 
 }  // namespace trading
+
+#include "impl/trading_platform_impl.hpp"
 
 #endif

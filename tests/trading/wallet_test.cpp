@@ -1,6 +1,7 @@
+#include "../../src/trading/wallet.hpp"
+
 #include <gtest/gtest.h>
 
-#include "../../src/trading/wallet.hpp"
 #include <tuple>
 
 namespace wallet_test {
@@ -8,8 +9,7 @@ namespace wallet_test {
 using namespace trading;
 using namespace trading::currencies;
 
-/*------------------------------------------------------------tests---------------------------------------------------------------*/
-
+/*------------------------------------------------tests--------------------------------------------------------*/
 class WalletByDefault : public testing::Test {
  protected:
   Wallet wallet_;

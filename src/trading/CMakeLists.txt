@@ -1,11 +1,15 @@
+add_subdirectory(impl)
+
 set(headers
   currency
   wallet
   market_member
   market_member_fwd
   order_details
-  order
   order_fwd
+  orders_matching_fwd
+  orders_matching
+  order
   deal_details
   deal
   deal_fwd
@@ -15,12 +19,9 @@ set(headers
   segment_analyzer
   segment_fwd
   trading_platform
+  trading_side
   trading)
 
-set(sources
-  wallet
-  market_member
-  trading_platform
-  )
+set(sources)
 
 prepare_sources("${headers}" "${sources}")

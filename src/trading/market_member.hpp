@@ -3,10 +3,11 @@
 
 #include <cinttypes>
 #include <type_traits>
-#include "wallet.hpp"
-#include "order_details.hpp"
-#include "deal_details.hpp"
+
+#include "deal_fwd.hpp"
+#include "order_fwd.hpp"
 #include "trading_platform.hpp"
+#include "wallet.hpp"
 
 namespace trading {
 
@@ -14,23 +15,8 @@ class MarketMember {
  public:
   using ID = uint32_t;
 
-  using OrderID = order_details::OrderBase::ID;
-  using OrderSide = order_details::OrderSide;
-
-  template <typename TargetCurrency, typename PaymentCurrency>
-  using OrderDetails =
-      order_details::OrderDetails<TargetCurrency, PaymentCurrency>;
-
-  using DealID = deal_details::DealBase::ID;
-  using DealSide = deal_details::DealSide;
-
-  template <typename TargetCurrency, typename PaymentCurrency>
-  using DealPart = deal_details::DealPart<TargetCurrency, PaymentCurrency>;
-
  public:
-  MarketMember(ID id)
-      : id_(id) {
-  }
+  MarketMember(ID id);
 
   ID Id() const noexcept {
     return id_;
@@ -46,87 +32,51 @@ class MarketMember {
   }
 
   template <typename... Currencies, typename... Args>
-  void TopUpWallet(const Args&... args) {
-    TopUp<Currencies...>(args...);
-  }
+  void TopUpWallet(const Args&... args);
 
   template <
       typename TargetCurrency, typename PaymentCurrency,
       std::enable_if_t<!std::is_arithmetic_v<PaymentCurrency>, bool> = true>
-  OrderID BuyCurrency(size_t num_units, PaymentCurrency unit_price) {
-    return MakeOrder<TargetCurrency, PaymentCurrency>(num_units, unit_price,
-                                                      OrderSide::kBuy);
-  }
+  Order<TargetCurrency, PaymentCurrency>::ID BuyCurrency(
+      size_t num_units, PaymentCurrency unit_price);
 
   template <typename TargetCurrency, typename PaymentCurrency>
-  OrderID BuyCurrency(size_t num_units, size_t unit_price,
-                      std::type_identity_t<PaymentCurrency> payment_currency =
-                          PaymentCurrency()) {
-    return MakeOrder<TargetCurrency, PaymentCurrency>(
-        num_units, PaymentCurrency(unit_price), OrderSide::kBuy);
-  }
+  Order<TargetCurrency, PaymentCurrency>::ID BuyCurrency(
+      size_t num_units, size_t unit_price,
+      std::type_identity_t<PaymentCurrency> payment_currency =
+          PaymentCurrency());
 
   template <
       typename TargetCurrency, typename PaymentCurrency,
       std::enable_if_t<!std::is_arithmetic_v<PaymentCurrency>, bool> = true>
-  OrderID SaleCurrency(size_t num_units, PaymentCurrency unit_price) {
-    return MakeOrder<TargetCurrency, PaymentCurrency>(num_units, unit_price,
-                                                      OrderSide::kSale);
-  }
+  Order<TargetCurrency, PaymentCurrency>::ID SaleCurrency(
+      size_t num_units, PaymentCurrency unit_price);
 
   template <typename TargetCurrency, typename PaymentCurrency>
-  OrderID SaleCurrency(size_t num_units, size_t unit_price,
-                       std::type_identity_t<PaymentCurrency> payment_currency =
-                           PaymentCurrency()) {
-    return MakeOrder<TargetCurrency, PaymentCurrency>(
-        num_units, PaymentCurrency(unit_price), OrderSide::kSale);
-  }
+  Order<TargetCurrency, PaymentCurrency>::ID SaleCurrency(
+      size_t num_units, size_t unit_price,
+      std::type_identity_t<PaymentCurrency> payment_currency =
+          PaymentCurrency());
 
-  // TODO: need to think about safe interaction with wallet
-  template <typename TargetCurrency, typename PaymentCurrency>
-  void CloseDealPart(
-      const DealPart<TargetCurrency, PaymentCurrency>& deal_part) {
-    if (deal_part.Side() == deal_details::DealSide::kBuy) {
-      wallet_.Withdraw<PaymentCurrency>(deal_part.Paid());
-      wallet_.TopUp<TargetCurrency>(deal_part.NumUnits());
-    } else if (deal_part.Side() == deal_details::DealSide::kSale) {
-      wallet_.TopUp<PaymentCurrency>(deal_part.Paid());
-      wallet_.Withdraw<TargetCurrency>(deal_part.NumUnits());
-    }
-  }
+  template <typename Deal>
+  void CloseDealPart(const Deal::PartType& deal_part);
 
  private:
   template <typename Currency, typename... Currencies, typename... Args>
-  void TopUp(const Currency& currency, const Args&... args) {
-    wallet_.TopUp(currency);
-    TopUp<Currencies...>(args...);
-  }
+  void TopUp(const Currency& currency, const Args&... args);
 
   template <typename Currency, typename... Currencies, typename... Args>
-  void TopUp(size_t num_currency_units, const Args&... args) {
-    wallet_.TopUp<Currency>(num_currency_units);
-    TopUp<Currencies...>(args...);
-  }
+  void TopUp(size_t num_currency_units, const Args&... args);
 
   template <typename Currency>
-  void TopUp(const Currency& currency) {
-    wallet_.TopUp(currency);
-  }
+  void TopUp(const Currency& currency);
 
   template <typename Currency>
-  void TopUp(size_t num_currency_units) {
-    wallet_.TopUp<Currency>(num_currency_units);
-  }
+  void TopUp(size_t num_currency_units);
 
-  template <typename TargetCurrency, typename PaymentCurrency>
-  OrderID MakeOrder(size_t num_units, PaymentCurrency unit_price,
-                    OrderSide order_side) {
-    OrderDetails<TargetCurrency, PaymentCurrency> order_details(
-        this, num_units, unit_price, order_side);
-    return TradingPlatformScope::Get()
-        ->PublishOrder<TargetCurrency, PaymentCurrency>(
-            std::move(order_details));
-  }
+  template <typename Order>
+  Order::ID MakeOrder(size_t num_units, Order::PaymentCurrencyType unit_price,
+                      TradingSide trading_side);
 
  private:
   ID id_;
@@ -134,5 +84,7 @@ class MarketMember {
 };
 
 }  // namespace trading
+
+#include "impl/market_member_impl.hpp"
 
 #endif

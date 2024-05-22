@@ -1,13 +1,12 @@
-#include <gtest/gtest.h>
-
 #include "../../src/trading/currency.hpp"
+
+#include <gtest/gtest.h>
 
 namespace currency_test {
 
 using namespace trading::currencies;
 
-/*------------------------------------------------------------tests---------------------------------------------------------------*/
-
+/*------------------------------------------------tests--------------------------------------------------------*/
 TEST(CurrencyOperators, LvalueAddCurrency) {
   Usd u1(100);
   Usd u2(200);

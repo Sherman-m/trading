@@ -1,8 +1,9 @@
 #ifndef TAGGED_NUMERIC_HPP
 #define TAGGED_NUMERIC_HPP
 
-#include "tagged.hpp"
 #include <cinttypes>
+
+#include "tagged.hpp"
 
 namespace util {
 

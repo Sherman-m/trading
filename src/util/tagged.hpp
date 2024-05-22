@@ -15,21 +15,13 @@ class Tagged {
  public:
   Tagged() = default;
 
-  explicit Tagged(const ValueType& value)
-      : value_(value) {
-  }
+  explicit Tagged(const ValueType& value) : value_(value) {}
 
-  explicit Tagged(ValueType&& value)
-      : value_(std::move(value)) {
-  }
+  explicit Tagged(ValueType&& value) : value_(std::move(value)) {}
 
-  const ValueType& operator*() const noexcept {
-    return value_;
-  }
+  const ValueType& operator*() const noexcept { return value_; }
 
-  ValueType operator*() noexcept {
-    return value_;
-  }
+  ValueType operator*() noexcept { return value_; }
 
   friend auto operator<=>(const Tagged&, const Tagged&) = default;
 
