@@ -1,0 +1,4 @@
+#ifndef TAGGED_NUMERIC_IMPL_HPP
+#define TAGGED_NUMERIC_IMPL_HPP
+
+#endif
