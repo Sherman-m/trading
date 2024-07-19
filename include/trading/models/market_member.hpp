@@ -3,8 +3,7 @@
 
 #include <cstdint>
 #include <trading/core/trading_platform.hpp>
-#include <trading/models/deal_fwd.hpp>
-#include <trading/models/order_fwd.hpp>
+#include <trading/models/segment_fwd.hpp>
 #include <trading/models/trading_side.hpp>
 #include <trading/models/wallet.hpp>
 #include <type_traits>
@@ -13,9 +12,13 @@ TRADING_NAMESPACE_BEGIN
 
 namespace models {
 
+template <typename Config>
 class MarketMember {
  public:
-  using ID = std::uint32_t;
+  using ID = typename Config::Id;
+
+  template <typename TargetCurrency, typename PaymentCurrency>
+  using OrderType = typename Config::OrderType<TargetCurrency, PaymentCurrency>;
 
   MarketMember(ID id);
 
@@ -35,14 +38,17 @@ class MarketMember {
   template <typename... Currencies, typename... Args>
   void TopUpWallet(const Args&... args);
 
+  template <typename... Currencies, typename... Args>
+  void WithdrawWallet(const Args&... args);
+
   template <
       typename TargetCurrency, typename PaymentCurrency,
       std::enable_if_t<!std::is_arithmetic_v<PaymentCurrency>, bool> = true>
-  Order<TargetCurrency, PaymentCurrency>::ID BuyCurrency(
+  OrderType<TargetCurrency, PaymentCurrency>::ID BuyCurrency(
       std::size_t num_units, PaymentCurrency unit_price);
 
   template <typename TargetCurrency, typename PaymentCurrency>
-  Order<TargetCurrency, PaymentCurrency>::ID BuyCurrency(
+  OrderType<TargetCurrency, PaymentCurrency>::ID BuyCurrency(
       std::size_t num_units, std::size_t unit_price,
       std::type_identity_t<PaymentCurrency> payment_currency =
           PaymentCurrency());
@@ -50,11 +56,11 @@ class MarketMember {
   template <
       typename TargetCurrency, typename PaymentCurrency,
       std::enable_if_t<!std::is_arithmetic_v<PaymentCurrency>, bool> = true>
-  Order<TargetCurrency, PaymentCurrency>::ID SaleCurrency(
+  OrderType<TargetCurrency, PaymentCurrency>::ID SaleCurrency(
       std::size_t num_units, PaymentCurrency unit_price);
 
   template <typename TargetCurrency, typename PaymentCurrency>
-  Order<TargetCurrency, PaymentCurrency>::ID SaleCurrency(
+  OrderType<TargetCurrency, PaymentCurrency>::ID SaleCurrency(
       std::size_t num_units, std::size_t unit_price,
       std::type_identity_t<PaymentCurrency> payment_currency =
           PaymentCurrency());
@@ -63,22 +69,10 @@ class MarketMember {
   void CloseDealPart(const Deal::PartType& deal_part);
 
  private:
-  template <typename Currency, typename... Currencies, typename... Args>
-  void TopUp(const Currency& currency, const Args&... args);
-
-  template <typename Currency, typename... Currencies, typename... Args>
-  void TopUp(std::size_t num_currency_units, const Args&... args);
-
-  template <typename Currency>
-  void TopUp(const Currency& currency);
-
-  template <typename Currency>
-  void TopUp(std::size_t num_currency_units);
-
-  template <typename Order>
-  Order::ID MakeOrder(std::size_t num_units,
-                      Order::PaymentCurrencyType unit_price,
-                      TradingSide trading_side);
+  template <typename TargetCurrency, typename PaymentCurrency>
+  OrderType<TargetCurrency, PaymentCurrency>::ID MakeOrder(
+      std::size_t num_units, PaymentCurrency unit_price,
+      TradingSide trading_side);
 
   ID id_;
   Wallet wallet_;

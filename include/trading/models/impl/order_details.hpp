@@ -9,11 +9,11 @@ namespace order_details {
 
 /*--------------------------------------------OrderDetails-----------------------------------------------------*/
 template <typename Order>
-OrderDetails<Order>::OrderDetails(MarketMember* market_member_ptr,
+OrderDetails<Order>::OrderDetails(OrderType::MarketMemberType::ID market_member_id,
                                   std::size_t num_units,
                                   OrderType::PaymentCurrencyType unit_price,
                                   TradingSide side)
-    : market_member_ptr_(market_member_ptr),
+    : market_member_id_(market_member_id),
       num_units_(num_units),
       unit_price_(unit_price),
       side_(side) {

@@ -5,8 +5,8 @@ TRADING_NAMESPACE_BEGIN
 
 namespace models {
 
-template <typename TargetCurrency, typename PaymentCurrency>
-Order<TargetCurrency, PaymentCurrency>::Order(ID id, DetailsType details)
+template <typename Config>
+Order<Config>::Order(ID id, DetailsType details)
     : id_(id),
       details_(std::move(details)) {
 }

@@ -23,17 +23,18 @@ class DealPart {
  public:
   using DealType = Deal;
   using OrderID = Deal::OrderType::ID;
+  using MarketMemberID = DealType::OrderType::MarketMemberType::ID;
 
-  explicit DealPart(MarketMember* market_member_ptr, OrderID order_id,
+  explicit DealPart(MarketMemberID market_member_ptr, OrderID order_id,
                     std::size_t num_units, DealType::PaymentCurrencyType paid,
                     TradingSide side);
 
-  const MarketMember* MarketMemberPtr() const noexcept {
-    return market_member_ptr_;
+  const MarketMemberID MarketMemberId() const noexcept {
+    return market_member_id_;
   }
 
-  MarketMember* MarketMemberPtr() noexcept {
-    return market_member_ptr_;
+  MarketMemberID MarketMemberId() noexcept {
+    return market_member_id_;
   }
 
   OrderID OrderId() const noexcept {
@@ -55,7 +56,7 @@ class DealPart {
   friend auto operator<=>(const DealPart&, const DealPart&) = default;
 
  private:
-  MarketMember* market_member_ptr_;
+  MarketMemberID market_member_id_;
   OrderID order_id_;
   std::size_t num_units_;
   DealType::PaymentCurrencyType paid_;

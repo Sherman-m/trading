@@ -5,7 +5,7 @@ TRADING_NAMESPACE_BEGIN
 
 namespace models {
 
-template <typename TargetCurrency, typename PaymentCurrency>
+template <typename Config>
 class Order;
 
 }  // namespace models

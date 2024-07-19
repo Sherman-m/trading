@@ -43,15 +43,6 @@ class CommonForDefaultStorageTest : public testing::Test {
   std::chrono::milliseconds ms_{30};
 
   static OrderType::ID order_id;
-
-  void SetUp() override {
-    SegmentConfig<storages::DefaultStorage> config(ioc_, ms_);
-    core::TradingPlatformScope::Run(config);
-  }
-
-  void TearDown() override {
-    core::TradingPlatformScope::Stop();
-  }
 };
 
 CommonForDefaultStorageTest::OrderType::ID
@@ -94,17 +85,27 @@ class BuyOrdersMM2 : virtual public CommonForDefaultStorageTest {
 };
 
 /*-----------------------------------------------tests---------------------------------------------------------*/
-class DefaultStorageTestOrders : public SaleOrdersMM1,
-                                 public BuyOrdersMM2 {
+class DefaultStorageTestOrders : public CommonForDefaultStorageTest {
  protected:
-  DefaultStorageType storage_;
+  void SetUp() override {
+    SegmentConfig<storages::DefaultStorage> config(ioc_, ms_);
+    core::TradingPlatformScope::Run(config);
+  }
+
+  void TearDown() override {
+    core::TradingPlatformScope::Stop();
+  }
 };
 
 TEST_F(DefaultStorageTestOrders, CheckingAddingTwoOrders) {
-  storage_.AddOrder(sale_order_30_for_50_);
-  storage_.AddOrder(buy_order_30_for_50_);
+  auto sale_order_id =
+      mm_1_.SaleCurrency<TargetCurrency>(num_units_30_, unit_price_50_);
+  auto buy_order_id =
+      mm_1_.BuyCurrency<TargetCurrency>(num_units_30_, unit_price_50_);
 
-  ASSERT_TRUE(storage_.GetOrder(sale_order_30_for_50_.Id()).has_value());
+  ASSERT_TRUE(core::TradingPlatformScope::Get()
+                  ->GetOrder(sale_order_30_for_50_.Id())
+                  .has_value());
   ASSERT_EQ(storage_.GetOrder(sale_order_30_for_50_.Id()),
             sale_order_30_for_50_);
 

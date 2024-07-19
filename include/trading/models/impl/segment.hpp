@@ -5,27 +5,17 @@ TRADING_NAMESPACE_BEGIN
 
 namespace models {
 
-/*-----------------------------------------------SegmentConfig-------------------------------------------------*/
-template <template <typename, typename> typename Storage>
-SegmentConfig<Storage>::SegmentConfig(boost::asio::io_context& context,
-                                      Milliseconds analyze_period)
-    : context(context),
-      analyze_period(analyze_period) {
-}
-
 /*--------------------------------------------------Segment----------------------------------------------------*/
-template <typename TargetCurrency, typename PaymentCurrency>
-template <template <typename, typename> typename Storage>
-Segment<TargetCurrency, PaymentCurrency>::Segment(
-    const SegmentConfig<Storage>& config)
-    : storage_ptr_(std::make_unique<Storage<OrderType, DealType>>()),
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
+Segment<Config, TargetCurrency, PaymentCurrency>::Segment(Config& config)
+    : storage_ptr_(std::make_unique<StorageType>()),
       segment_analyzer_ptr_(std::make_shared<SegmentAnalyzerType>(
-          config.context, config.analyze_period)) {
+          config.config_.ioc_, config.config_.analyze_period_)) {
   segment_analyzer_ptr_->HandlerStart(std::bind(&Segment::Analyze, this));
 }
 
-template <typename TargetCurrency, typename PaymentCurrency>
-Segment<TargetCurrency, PaymentCurrency>::Segment(Segment&& other) {
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
+Segment<Config, TargetCurrency, PaymentCurrency>::Segment(Segment&& other) {
   other.segment_analyzer_ptr_->HandlerStop();
 
   storage_ptr_ = std::move(other.storage_ptr_);
@@ -34,9 +24,9 @@ Segment<TargetCurrency, PaymentCurrency>::Segment(Segment&& other) {
   segment_analyzer_ptr_->HandlerStart(std::bind(&Segment::Analyze, this));
 }
 
-template <typename TargetCurrency, typename PaymentCurrency>
-Segment<TargetCurrency, PaymentCurrency>&
-Segment<TargetCurrency, PaymentCurrency>::operator=(Segment&& other) {
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
+Segment<Config, TargetCurrency, PaymentCurrency>&
+Segment<Config, TargetCurrency, PaymentCurrency>::operator=(Segment&& other) {
   if (this != &other) {
     other.segment_analyzer_ptr_->HandlerStop();
 
@@ -48,35 +38,43 @@ Segment<TargetCurrency, PaymentCurrency>::operator=(Segment&& other) {
   return *this;
 }
 
-template <typename TargetCurrency, typename PaymentCurrency>
-Segment<TargetCurrency, PaymentCurrency>::~Segment() {
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
+Segment<Config, TargetCurrency, PaymentCurrency>::~Segment() {
   segment_analyzer_ptr_.reset();
 }
 
-template <typename TargetCurrency, typename PaymentCurrency>
-void Segment<TargetCurrency, PaymentCurrency>::AddOrder(OrderType order) {
-  storage_ptr_->AddOrder(std::move(order));
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
+Segment<Config, TargetCurrency, PaymentCurrency>::OrderType::ID
+Segment<Config, TargetCurrency, PaymentCurrency>::AddOrder(
+    OrderType::DetailsType order_details) {
+  return storage_ptr_->AddOrder(std::move(order_details));
 }
 
-template <typename TargetCurrency, typename PaymentCurrency>
-std::optional<typename Segment<TargetCurrency, PaymentCurrency>::OrderType>
-Segment<TargetCurrency, PaymentCurrency>::GetOrder(OrderType::ID id) const {
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
+std::optional<
+    typename Segment<Config, TargetCurrency, PaymentCurrency>::OrderType>
+Segment<Config, TargetCurrency, PaymentCurrency>::GetOrder(
+    OrderType::ID id) const {
   return storage_ptr_->GetOrder(std::move(id));
 }
 
-template <typename TargetCurrency, typename PaymentCurrency>
-void Segment<TargetCurrency, PaymentCurrency>::AddDeal(DealType deal) {
-  storage_ptr_->AddDeal(deal);
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
+Segment<Config, TargetCurrency, PaymentCurrency>::DealType::ID
+Segment<Config, TargetCurrency, PaymentCurrency>::AddDeal(
+    DealType::PartsType deal_parts) {
+  storage_ptr_->AddDeal(deal_parts);
 }
 
-template <typename TargetCurrency, typename PaymentCurrency>
-std::optional<typename Segment<TargetCurrency, PaymentCurrency>::DealType>
-Segment<TargetCurrency, PaymentCurrency>::GetDeal(DealType::ID id) const {
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
+std::optional<
+    typename Segment<Config, TargetCurrency, PaymentCurrency>::DealType>
+Segment<Config, TargetCurrency, PaymentCurrency>::GetDeal(
+    DealType::ID id) const {
   return storage_ptr_->GetDeal(std::move(id));
 }
 
-template <typename TargetCurrency, typename PaymentCurrency>
-void Segment<TargetCurrency, PaymentCurrency>::Analyze() {
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
+void Segment<Config, TargetCurrency, PaymentCurrency>::Analyze() {
   storage_ptr_->FindMatchingOrders();
 }
 

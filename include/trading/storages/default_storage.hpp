@@ -13,15 +13,17 @@ namespace storages {
 
 namespace details {
 
+using CommonID = size_t;
+
 /*------------------------------------------OrderStorage-------------------------------------------------------*/
-template <typename Order>
+template <typename TradingPlatformScope, typename Order>
 class OrderStorage {
  public:
   using OrderType = Order;
 
   OrderStorage() = default;
 
-  void Add(OrderType order);
+  OrderType::ID Add(typename OrderType::DetailsType order_details);
 
   std::optional<OrderType> Get(OrderType::ID id) const;
 
@@ -103,6 +105,7 @@ class OrderStorage {
 
   OrderIDToLocation order_id_to_location_;
   TradingSideToMapOrders order_side_to_map_orders_;
+  OrderType::ID next_order_id_;
 };
 
 /*------------------------------------------DealStorage--------------------------------------------------------*/
@@ -113,7 +116,7 @@ class DealStorage {
 
   DealStorage() = default;
 
-  void Add(DealType deal);
+  Deal::ID Add(DealType::OrderType::MatchingType::Result matching_result);
 
   std::optional<DealType> Get(DealType::ID id) const;
 
@@ -121,32 +124,36 @@ class DealStorage {
   using DealIDToDeal = std::unordered_map<typename DealType::ID, DealType>;
 
   DealIDToDeal deal_id_to_deal_;
+  DealType::ID next_deal_id_;
 };
 
 }  // namespace details
 
 /*-----------------------------------------DefaultStorage------------------------------------------------------*/
-template <typename Order, typename Deal>
-class DefaultStorage : public IStorage<Order, Deal> {
+template <typename Config>
+class DefaultStorage : public IStorage<Config, details::CommonID> {
  public:
-  using BaseType = IStorage<Order, Deal>;
+  using BaseType = IStorage<Config, details::CommonID>;
   using OrderType = BaseType::OrderType;
   using DealType = BaseType::DealType;
 
   DefaultStorage() = default;
 
-  void AddOrder(OrderType order) override;
+  OrderType::ID AddOrder(OrderType::DetailsType order_details) override;
 
   std::optional<OrderType> GetOrder(OrderType::ID id) const override;
 
-  void AddDeal(DealType deal) override;
+  DealType::ID AddDeal(typename DealType::OrderType::MatchingType::Result
+                           matching_result) override;
 
   std::optional<DealType> GetDeal(DealType::ID id) const override;
 
   void FindMatchingOrders() override;
 
  private:
-  using OrderStorageType = details::OrderStorage<OrderType>;
+  using OrderStorageType =
+      details::OrderStorage<typename Config::TradingPlatformScopeType,
+                            OrderType>;
   using DealStorageType = details::DealStorage<DealType>;
 
   OrderStorageType order_storage_;

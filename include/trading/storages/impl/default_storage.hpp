@@ -10,10 +10,15 @@ namespace storages {
 namespace details {
 
 /*------------------------------------------OrderStorage-------------------------------------------------------*/
-template <typename Order>
-void OrderStorage<Order>::Add(OrderType order) {
+template <typename TradingPlatformScope, typename Order>
+OrderStorage<TradingPlatformScope, Order>::OrderType::ID
+OrderStorage<TradingPlatformScope, Order>::Add(
+    typename OrderType::DetailsType order_details) {
+  auto order_id = next_order_id_++;
+
+  Order order(order_id, std::move(order_details));
+
   auto key = GenerateKey(order);
-  auto order_id = order.Id();
   auto order_side = order.Details().Side();
 
   auto [it, is_inserted] =
@@ -22,11 +27,12 @@ void OrderStorage<Order>::Add(OrderType order) {
     order_id_to_location_.emplace(std::move(order_id),
                                   OrderLocation(order_side, it));
   }
+  return order_id;
 }
 
-template <typename Order>
-std::optional<typename OrderStorage<Order>::OrderType> OrderStorage<Order>::Get(
-    OrderType::ID id) const {
+template <typename TradingPlatformScope, typename Order>
+std::optional<typename OrderStorage<TradingPlatformScope, Order>::OrderType>
+OrderStorage<TradingPlatformScope, Order>::Get(OrderType::ID id) const {
   if (auto it = order_id_to_location_.find(id);
       it != order_id_to_location_.end()) {
     return it->second.Value();
@@ -34,8 +40,8 @@ std::optional<typename OrderStorage<Order>::OrderType> OrderStorage<Order>::Get(
   return std::nullopt;
 }
 
-template <typename Order>
-void OrderStorage<Order>::Delete(OrderType::ID id) {
+template <typename TradingPlatformScope, typename Order>
+void OrderStorage<TradingPlatformScope, Order>::Delete(OrderType::ID id) {
   if (auto it = order_id_to_location_.find(id);
       it != order_id_to_location_.end()) {
     order_side_to_map_orders_.erase(it->second.Key());
@@ -43,8 +49,8 @@ void OrderStorage<Order>::Delete(OrderType::ID id) {
   }
 }
 
-template <typename Order>
-void OrderStorage<Order>::FindMatches() {
+template <typename TradingPlatformScope, typename Order>
+void OrderStorage<TradingPlatformScope, Order>::FindMatches() {
   for (auto sale_order_it = MapOrders(models::TradingSide::kSale).begin();
        sale_order_it != MapOrders(models::TradingSide::kSale).end();
        MoveMapOrderIter(sale_order_it)) {
@@ -55,9 +61,9 @@ void OrderStorage<Order>::FindMatches() {
                                            sale_order_it->second)) {
         auto matching_res = OrderType::MatchingType::Match(
             buy_order_it->second, sale_order_it->second);
-
-        core::TradingPlatformScope::Get()->CloseDeal<models::Deal<OrderType>>(
-            std::move(matching_res));
+        TradingPlatformScope::Get()
+            ->template CloseDeal<models::Deal<OrderType>>(
+                std::move(matching_res));
       }
 
       if (sale_order_it->second.IsCompleted()) {
@@ -68,42 +74,48 @@ void OrderStorage<Order>::FindMatches() {
   }
 }
 
-template <typename Order>
-OrderStorage<Order>::MapOrdersType& OrderStorage<Order>::MapOrders(
-    models::TradingSide side) {
+template <typename TradingPlatformScope, typename Order>
+OrderStorage<TradingPlatformScope, Order>::MapOrdersType&
+OrderStorage<TradingPlatformScope, Order>::MapOrders(models::TradingSide side) {
   return order_side_to_map_orders_[side];
 }
 
-template <typename Order>
-void OrderStorage<Order>::MoveMapOrderIter(MapOrdersIterType& iter) {
+template <typename TradingPlatformScope, typename Order>
+void OrderStorage<TradingPlatformScope, Order>::MoveMapOrderIter(
+    MapOrdersIterType& iter) {
   iter = (iter->second.IsCompleted()) ? Delete(iter) : std::next(iter);
 }
 
-template <typename Order>
-void OrderStorage<Order>::MoveMapOrderReverseIter(
+template <typename TradingPlatformScope, typename Order>
+void OrderStorage<TradingPlatformScope, Order>::MoveMapOrderReverseIter(
     MapOrdersReverseIterType& r_iter) {
   r_iter = (r_iter->second.IsCompleted())
                ? std::make_reverse_iterator(Delete(std::prev(r_iter.base())))
                : std::next(r_iter);
 }
 
-template <typename Order>
-OrderStorage<Order>::StorageKey OrderStorage<Order>::GenerateKey(
+template <typename TradingPlatformScope, typename Order>
+OrderStorage<TradingPlatformScope, Order>::StorageKey
+OrderStorage<TradingPlatformScope, Order>::GenerateKey(
     const OrderType& order) const {
   return StorageKey(order);
 }
 
-template <typename Order>
-OrderStorage<Order>::MapOrdersIterType OrderStorage<Order>::Delete(
-    MapOrdersIterType iter) {
+template <typename TradingPlatformScope, typename Order>
+OrderStorage<TradingPlatformScope, Order>::MapOrdersIterType
+OrderStorage<TradingPlatformScope, Order>::Delete(MapOrdersIterType iter) {
   order_id_to_location_.erase(iter->second.Id());
   return MapOrders(iter->second.Details().Side()).erase(iter);
 }
 
 /*------------------------------------------DealStorage--------------------------------------------------------*/
 template <typename Deal>
-void DealStorage<Deal>::Add(DealType deal) {
+DealStorage<Deal>::DealType::ID DealStorage<Deal>::Add(
+    DealType::OrderType::MatchingType::Result matching_result) {
+  auto deal = DealType(next_deal_id_++, std::move(matching_result));
+  auto deal_id = deal.Id();
   deal_id_to_deal_.emplace(deal.Id(), std::move(deal));
+  return deal_id;
 }
 
 template <typename Deal>
@@ -118,30 +130,32 @@ std::optional<typename DealStorage<Deal>::DealType> DealStorage<Deal>::Get(
 }  // namespace details
 
 /*-----------------------------------------DefaultStorage------------------------------------------------------*/
-template <typename Order, typename Deal>
-void DefaultStorage<Order, Deal>::AddOrder(OrderType order) {
-  order_storage_.Add(std::move(order));
+template <typename Config>
+typename DefaultStorage<Config>::OrderType::ID DefaultStorage<Config>::AddOrder(
+    OrderType::DetailsType order_details) {
+  return order_storage_.Add(std::move(order_details));
 }
 
-template <typename Order, typename Deal>
-std::optional<typename DefaultStorage<Order, Deal>::OrderType>
-DefaultStorage<Order, Deal>::GetOrder(OrderType::ID id) const {
+template <typename Config>
+std::optional<typename DefaultStorage<Config>::OrderType>
+DefaultStorage<Config>::GetOrder(OrderType::ID id) const {
   return order_storage_.Get(id);
 }
 
-template <typename Order, typename Deal>
-void DefaultStorage<Order, Deal>::AddDeal(DealType deal) {
-  deal_storage_.Add(std::move(deal));
+template <typename Config>
+DefaultStorage<Config>::DealType::ID DefaultStorage<Config>::AddDeal(
+    typename DealType::OrderType::MatchingType::Result matching_result) {
+  return deal_storage_.Add(std::move(matching_result));
 };
 
-template <typename Order, typename Deal>
-std::optional<typename DefaultStorage<Order, Deal>::DealType>
-DefaultStorage<Order, Deal>::GetDeal(DealType::ID id) const {
+template <typename Config>
+std::optional<typename DefaultStorage<Config>::DealType>
+DefaultStorage<Config>::GetDeal(DealType::ID id) const {
   return deal_storage_.Get(id);
 }
 
-template <typename Order, typename Deal>
-void DefaultStorage<Order, Deal>::FindMatchingOrders() {
+template <typename Config>
+void DefaultStorage<Config>::FindMatchingOrders() {
   order_storage_.FindMatches();
 }
 

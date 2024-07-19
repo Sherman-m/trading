@@ -2,25 +2,35 @@
 #define STORAGE_HPP
 
 #include <optional>
+#include <trading/models/deal_fwd.hpp>
+#include <trading/models/order_fwd.hpp>
 
 TRADING_NAMESPACE_BEGIN
 
 namespace storages {
 
-template <typename Order, typename Deal>
+template <typename Config, typename IDType>
 class IStorage {
+  struct OrderConfig {
+    using ID = IDType;
+    using TargetCurrencyType = typename Config::TargetCurrencyType;
+    using PaymentCurrencyType = typename Config::PaymentCurrencyType;
+    using SegmentType = typename Config::SegmentType;
+    using MarketMemberType = typename Config::MarketMemberType;
+  };
+
  public:
-  using OrderType = Order;
-  using DealType = Deal;
+  using OrderType = models::Order<OrderConfig>;
+  using DealType = models::Deal<OrderType>;
 
   virtual ~IStorage() = default;
 
-  virtual void AddOrder(OrderType order) = 0;
-  virtual std::optional<OrderType> GetOrder(
-      typename OrderType::ID id) const = 0;
+  virtual OrderType::ID AddOrder(OrderType::DetailsType order) = 0;
+  virtual std::optional<OrderType> GetOrder(OrderType::ID id) const = 0;
 
-  virtual void AddDeal(DealType deal) = 0;
-  virtual std::optional<DealType> GetDeal(typename DealType::ID id) const = 0;
+  virtual DealType::ID AddDeal(
+      DealType::OrderType::MatchingType::Result matching_result) = 0;
+  virtual std::optional<DealType> GetDeal(DealType::ID id) const = 0;
 
   virtual void FindMatchingOrders() = 0;
 };

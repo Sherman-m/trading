@@ -35,7 +35,7 @@ class Tagged {
   friend auto operator<=>(const Tagged&, const Tagged&) = default;
 
  protected:
-  ValueType value_;
+  ValueType value_{};
 };
 
 template <typename TaggedValue>

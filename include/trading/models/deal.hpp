@@ -23,8 +23,6 @@ class Deal : public deal_details::DealBase {
   using PartType = deal_details::DealPart<Deal>;
   using PartsType = std::pair<PartType, PartType>;
 
-  using SegmentType = Order::SegmentType;
-
   explicit Deal(ID id, OrderType::MatchingType::Result result);
 
   ID Id() const noexcept {

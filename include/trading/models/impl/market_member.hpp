@@ -8,46 +8,67 @@ TRADING_NAMESPACE_BEGIN
 
 namespace models {
 
-template <typename... Currencies, typename... Args>
-void MarketMember::TopUpWallet(const Args&... args) {
-  TopUp<Currencies...>(args...);
+template <typename Config>
+MarketMember<Config>::MarketMember(ID id)
+    : id_(id) {
 }
 
+template <typename Config>
+template <typename... Currencies, typename... Args>
+void MarketMember<Config>::TopUpWallet(const Args&... args) {
+  wallet_.TopUp<Currencies...>(args...);
+}
+
+template <typename Config>
+template <typename... Currencies, typename... Args>
+void MarketMember<Config>::WithdrawWallet(const Args&... args) {
+  wallet_.Withdraw<Currencies...>(args...);
+}
+
+template <typename Config>
 template <typename TargetCurrency, typename PaymentCurrency,
           std::enable_if_t<!std::is_arithmetic_v<PaymentCurrency>, bool>>
-Order<TargetCurrency, PaymentCurrency>::ID MarketMember::BuyCurrency(
-    size_t num_units, PaymentCurrency unit_price) {
-  return MakeOrder<Order<TargetCurrency, PaymentCurrency>>(
-      num_units, unit_price, TradingSide::kBuy);
+typename MarketMember<Config>::OrderType<TargetCurrency, PaymentCurrency>::ID
+MarketMember<Config>::BuyCurrency(size_t num_units,
+                                  PaymentCurrency unit_price) {
+  return MakeOrder<TargetCurrency, PaymentCurrency>(num_units, unit_price,
+                                                    TradingSide::kBuy);
 }
 
+template <typename Config>
 template <typename TargetCurrency, typename PaymentCurrency>
-Order<TargetCurrency, PaymentCurrency>::ID MarketMember::BuyCurrency(
+typename MarketMember<Config>::OrderType<TargetCurrency, PaymentCurrency>::ID
+MarketMember<Config>::BuyCurrency(
     size_t num_units, size_t unit_price,
     std::type_identity_t<PaymentCurrency> payment_currency) {
-  return MakeOrder<Order<TargetCurrency, PaymentCurrency>>(
+  return MakeOrder<TargetCurrency, PaymentCurrency>(
       num_units, PaymentCurrency(unit_price), TradingSide::kBuy);
 }
 
+template <typename Config>
 template <typename TargetCurrency, typename PaymentCurrency,
           std::enable_if_t<!std::is_arithmetic_v<PaymentCurrency>, bool>>
-Order<TargetCurrency, PaymentCurrency>::ID MarketMember::SaleCurrency(
-    size_t num_units, PaymentCurrency unit_price) {
-  return MakeOrder<Order<TargetCurrency, PaymentCurrency>>(
-      num_units, unit_price, TradingSide::kSale);
+typename MarketMember<Config>::OrderType<TargetCurrency, PaymentCurrency>::ID
+MarketMember<Config>::SaleCurrency(size_t num_units,
+                                   PaymentCurrency unit_price) {
+  return MakeOrder<TargetCurrency, PaymentCurrency>(num_units, unit_price,
+                                                    TradingSide::kSale);
 }
 
+template <typename Config>
 template <typename TargetCurrency, typename PaymentCurrency>
-Order<TargetCurrency, PaymentCurrency>::ID MarketMember::SaleCurrency(
+typename MarketMember<Config>::OrderType<TargetCurrency, PaymentCurrency>::ID
+MarketMember<Config>::SaleCurrency(
     size_t num_units, size_t unit_price,
     std::type_identity_t<PaymentCurrency> payment_currency) {
-  return MakeOrder<Order<TargetCurrency, PaymentCurrency>>(
+  return MakeOrder<TargetCurrency, PaymentCurrency>(
       num_units, PaymentCurrency(unit_price), TradingSide::kSale);
 }
 
 // TODO: need to think about safe interaction with wallet
+template <typename Config>
 template <typename Deal>
-void MarketMember::CloseDealPart(const Deal::PartType& deal_part) {
+void MarketMember<Config>::CloseDealPart(const Deal::PartType& deal_part) {
   if (deal_part.Side() == TradingSide::kBuy) {
     wallet_.Withdraw<typename Deal::PaymentCurrencyType>(deal_part.Paid());
     wallet_.TopUp<typename Deal::TargetCurrencyType>(deal_part.NumUnits());
@@ -57,36 +78,18 @@ void MarketMember::CloseDealPart(const Deal::PartType& deal_part) {
   }
 }
 
-template <typename Currency, typename... Currencies, typename... Args>
-void MarketMember::TopUp(const Currency& currency, const Args&... args) {
-  wallet_.TopUp(currency);
-  TopUp<Currencies...>(args...);
-}
+template <typename Config>
+template <typename TargetCurrency, typename PaymentCurrency>
+typename MarketMember<Config>::OrderType<TargetCurrency, PaymentCurrency>::ID
+MarketMember<Config>::MakeOrder(size_t num_units, PaymentCurrency unit_price,
+                                TradingSide trading_side) {
+  using OrderType = OrderType<TargetCurrency, PaymentCurrency>;
 
-template <typename Currency, typename... Currencies, typename... Args>
-void MarketMember::TopUp(size_t num_currency_units, const Args&... args) {
-  wallet_.TopUp<Currency>(num_currency_units);
-  TopUp<Currencies...>(args...);
-}
+  typename OrderType::DetailsType order_details(id_, num_units, unit_price,
+                                                trading_side);
 
-template <typename Currency>
-void MarketMember::TopUp(const Currency& currency) {
-  wallet_.TopUp(currency);
-}
-
-template <typename Currency>
-void MarketMember::TopUp(size_t num_currency_units) {
-  wallet_.TopUp<Currency>(num_currency_units);
-}
-
-template <typename Order>
-Order::ID MarketMember::MakeOrder(size_t num_units,
-                                  Order::PaymentCurrencyType unit_price,
-                                  TradingSide trading_side) {
-  typename Order::DetailsType order_details(this, num_units, unit_price,
-                                            trading_side);
-  return core::TradingPlatformScope::Get()->PublishOrder<Order>(
-      std::move(order_details));
+  return Config::TradingPlatformScopeType::Get()
+      ->template PublishOrder<OrderType>(std::move(order_details));
 }
 
 }  // namespace models

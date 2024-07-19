@@ -14,27 +14,23 @@ TRADING_NAMESPACE_BEGIN
 
 namespace models {
 
-/*--------------------------------------------SegmentConfig----------------------------------------------------*/
-template <template <typename, typename> typename Storage>
-struct SegmentConfig {
-  using Milliseconds = std::chrono::milliseconds;
-
-  explicit SegmentConfig(boost::asio::io_context& context,
-                         Milliseconds analyze_period);
-
-  boost::asio::io_context& context;
-  Milliseconds analyze_period;
-};
-
 /*----------------------------------------------Segment--------------------------------------------------------*/
-template <typename TargetCurrency, typename PaymentCurrency>
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
 class Segment {
- public:
-  using OrderType = Order<TargetCurrency, PaymentCurrency>;
-  using DealType = Deal<OrderType>;
+  struct StorageConfig {
+    using MarketMemberType = typename Config::MarketMemberType;
 
-  template <template <typename, typename> typename Storage>
-  Segment(const SegmentConfig<Storage>& config);
+    using TargetCurrencyType = TargetCurrency;
+    using PaymentCurrencyType = PaymentCurrency;
+    using TradingPlatformScopeType = typename Config::TradingPlatformScopeType;
+    using SegmentType = Segment<Config, TargetCurrency, PaymentCurrency>;
+  };
+
+ public:
+  using OrderType = typename Config::StorageType<StorageConfig>::OrderType;
+  using DealType = typename Config::StorageType<StorageConfig>::DealType;
+
+  Segment(Config& config);
 
   Segment(const Segment&) = delete;
   Segment& operator=(const Segment&) = delete;
@@ -44,11 +40,11 @@ class Segment {
 
   ~Segment();
 
-  void AddOrder(OrderType order);
+  OrderType::ID AddOrder(OrderType::DetailsType order);
 
   std::optional<OrderType> GetOrder(OrderType::ID id) const;
 
-  void AddDeal(DealType deal);
+  DealType::ID AddDeal(DealType::PartsType deal);
 
   std::optional<DealType> GetDeal(DealType::ID id) const;
 
@@ -56,10 +52,11 @@ class Segment {
 
  private:
   using SegmentAnalyzerType = segment_details::SegmentAnalyzer<
-      Segment<TargetCurrency, PaymentCurrency>>;
-  using IStorageType = storages::IStorage<OrderType, DealType>;
+      Segment<Config, TargetCurrency, PaymentCurrency>>;
 
-  std::unique_ptr<IStorageType> storage_ptr_;
+  using StorageType = typename Config::StorageType<StorageConfig>;
+
+  std::unique_ptr<StorageType> storage_ptr_;
   std::shared_ptr<SegmentAnalyzerType> segment_analyzer_ptr_;
 };
 

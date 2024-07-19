@@ -10,40 +10,54 @@ namespace core {
 /*----------------------------------------TradingPlatformImpl--------------------------------------------------*/
 namespace trading_platform_details {
 
-template <template <typename, typename> typename Storage>
-TradingPlatformImpl::TradingPlatformImpl(
-    const models::SegmentConfig<Storage>& config)
-    : segments_(util::custom_type_traits::construct_tuple_from_same_args<
-                TupleSegmentsType>(config)) {
+template <typename TradingPlatformConfig>
+TradingPlatformImpl<TradingPlatformConfig>::TradingPlatformImpl(
+    TradingPlatformConfig config)
+    : config_(std::move(config)),
+      segments_(util::custom_type_traits::construct_tuple_from_same_args<
+                TupleSegmentsType>(SegmentConfig(config_))) {
+  // config_.Setup();
 }
 
-template <typename OrderType>
-TradingPlatformImpl::OrderID TradingPlatformImpl::PublishOrder(
-    OrderType::DetailsType order_details) {
-  OrderType order(++next_order_id_, std::move(order_details));
-  std::get<typename OrderType::SegmentType>(segments_).AddOrder(
-      std::move(order));
-  return next_order_id_;
+template <typename TradingPlatformConfig>
+template <typename Order>
+Order::ID TradingPlatformImpl<TradingPlatformConfig>::PublishOrder(
+    Order::DetailsType order_details) {
+  return std::get<typename Order::SegmentType>(segments_).AddOrder(
+      std::move(order_details));
 }
 
+template <typename TradingPlatformConfig>
 template <typename Deal>
-void TradingPlatformImpl::CloseDeal(
-    Deal::OrderType::MatchingType::Result matching_res) {
-  Deal deal(++next_deal_id_, std::move(matching_res));
-  deal.BuyerPart().MarketMemberPtr()->template CloseDealPart<Deal>(
-      deal.BuyerPart());
-  deal.SellerPart().MarketMemberPtr()->template CloseDealPart<Deal>(
-      deal.SellerPart());
-
-  std::get<typename Deal::SegmentType>(segments_).AddDeal(std::move(deal));
+void TradingPlatformImpl<TradingPlatformConfig>::CloseDeal(
+    Deal::OrderType::MatchingType::Result matching_result) {
+  Deal deal(0, matching_result);
+  mm_storage_.CompleteDeal(deal);
 }
+
 }  // namespace trading_platform_details
 
 /*---------------------------------------TradingPlatformScope--------------------------------------------------*/
-template <template <typename, typename> typename Storage>
-void TradingPlatformScope::Run(const models::SegmentConfig<Storage>& config) {
-  static TradingPlatformImpl platform(config);
-  trading_platform_ptr_ = &platform;
+template <typename TradingPlatformConfig>
+void TradingPlatformScope<TradingPlatformConfig>::Run(
+    TradingPlatformConfig config) {
+  static TradingPlatformImpl platform(std::move(config));
+  trading_platform_ = &platform;
+}
+
+template <typename TradingPlatformConfig>
+TradingPlatformScope<TradingPlatformConfig>::TradingPlatformImpl*
+    TradingPlatformScope<TradingPlatformConfig>::trading_platform_ = nullptr;
+
+template <typename TradingPlatformConfig>
+TradingPlatformScope<TradingPlatformConfig>::TradingPlatformImpl*
+TradingPlatformScope<TradingPlatformConfig>::Get() {
+  return trading_platform_;
+}
+
+template <typename TradingPlatformConfig>
+void TradingPlatformScope<TradingPlatformConfig>::Stop() {
+  trading_platform_->~TradingPlatformImpl();
 }
 
 }  // namespace core

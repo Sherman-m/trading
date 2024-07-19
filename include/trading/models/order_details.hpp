@@ -12,12 +12,6 @@ namespace models {
 
 namespace order_details {
 
-/*--------------------------------------------OrderBase--------------------------------------------------------*/
-class OrderBase {
- public:
-  using ID = std::uint32_t;
-};
-
 /*--------------------------------------------OrderDetails-----------------------------------------------------*/
 template <typename Order>
 class OrderDetails {
@@ -27,16 +21,17 @@ class OrderDetails {
  public:
   using OrderType = Order;
 
-  explicit OrderDetails(MarketMember* market_member_ptr, std::size_t num_units,
+  explicit OrderDetails(OrderType::MarketMemberType::ID market_member_id,
+                        std::size_t num_units,
                         OrderType::PaymentCurrencyType unit_price,
                         TradingSide side);
 
-  const MarketMember* MarketMemberPtr() const noexcept {
-    return market_member_ptr_;
+  const OrderType::MarketMemberType::ID MarketMemberId() const noexcept {
+    return market_member_id_;
   }
 
-  MarketMember* MarketMemberPtr() noexcept {
-    return market_member_ptr_;
+  OrderType::MarketMemberType::ID MarketMemberId() noexcept {
+    return market_member_id_;
   }
 
   std::size_t NumUnits() const noexcept {
@@ -54,7 +49,7 @@ class OrderDetails {
   friend auto operator<=>(const OrderDetails&, const OrderDetails&) = default;
 
  private:
-  MarketMember* market_member_ptr_;
+  OrderType::MarketMemberType::ID market_member_id_;
   std::size_t num_units_;
   OrderType::PaymentCurrencyType unit_price_;
   TradingSide side_;

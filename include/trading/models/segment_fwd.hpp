@@ -10,7 +10,7 @@ template <template <typename, typename> typename Storage>
 struct SegmentConfig;
 
 /*----------------------------------------------Segment--------------------------------------------------------*/
-template <typename TargetCurrency, typename PaymentCurrency>
+template <typename Config, typename TargetCurrency, typename PaymentCurrency>
 class Segment;
 
 }  // namespace models

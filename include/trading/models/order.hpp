@@ -9,20 +9,21 @@ TRADING_NAMESPACE_BEGIN
 
 namespace models {
 
-template <typename TargetCurrency, typename PaymentCurrency>
-class Order : public order_details::OrderBase {
+template <typename Config>
+class Order {
   friend class OrdersMatching<Order>;
 
  public:
-  using BaseType = order_details::OrderBase;
-  using ID = BaseType::ID;
+  using ID = Config::ID;
+  using MarketMemberType = Config::MarketMemberType;
 
-  using TargetCurrencyType = TargetCurrency;
-  using PaymentCurrencyType = PaymentCurrency;
+  using TargetCurrencyType = Config::TargetCurrencyType;
+  using PaymentCurrencyType = Config::PaymentCurrencyType;
 
   using DetailsType = order_details::OrderDetails<Order>;
   using MatchingType = OrdersMatching<Order>;
-  using SegmentType = Segment<TargetCurrency, PaymentCurrency>;
+
+  using SegmentType = Config::SegmentType;
 
   explicit Order(ID id, DetailsType details);
 

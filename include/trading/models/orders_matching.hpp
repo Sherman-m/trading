@@ -12,25 +12,27 @@ template <typename Order>
 class OrdersMatching {
  public:
   using OrderType = Order;
+  using MarketMember = OrderType::MarketMemberType;
+
   /*----------------------------------------OrdersMatching::Result-----------------------------------------------*/
   class Result {
    public:
     explicit Result(OrderType& buy_order, OrderType& sale_order);
 
-    const MarketMember* BuyerPtr() const noexcept {
-      return buyer_seller_ptrs_.first;
+    const MarketMember::ID BuyerId() const noexcept {
+      return buyer_seller_id_.first;
     }
 
-    MarketMember* BuyerPtr() noexcept {
-      return buyer_seller_ptrs_.first;
+    MarketMember::ID BuyerId() noexcept {
+      return buyer_seller_id_.first;
     }
 
-    const MarketMember* SellerPtr() const noexcept {
-      return buyer_seller_ptrs_.second;
+    const MarketMember::ID SellerId() const noexcept {
+      return buyer_seller_id_.second;
     }
 
-    MarketMember* SellerPtr() noexcept {
-      return buyer_seller_ptrs_.second;
+    MarketMember::ID SellerId() noexcept {
+      return buyer_seller_id_.second;
     }
 
     OrderType::ID BuyerOrderId() const noexcept {
@@ -54,11 +56,12 @@ class OrdersMatching {
    private:
     void Init(OrderType& buy_order, OrderType& sale_order);
 
-    using BuyerSellerPtrs = std::pair<MarketMember*, MarketMember*>;
+    using BuyerSellerID =
+        std::pair<typename MarketMember::ID, typename MarketMember::ID>;
     using BuyerSellerOrdersID =
         std::pair<typename OrderType::ID, typename OrderType::ID>;
 
-    BuyerSellerPtrs buyer_seller_ptrs_;
+    BuyerSellerID buyer_seller_id_;
     BuyerSellerOrdersID buyer_seller_orders_id_;
     std::size_t diff_;
     OrderType::PaymentCurrencyType paid_;

@@ -27,8 +27,8 @@ OrdersMatching<Order>::Result::Result(OrderType& buy_order,
 template <typename Order>
 void OrdersMatching<Order>::Result::Init(OrderType& buy_order,
                                          OrderType& sale_order) {
-  buyer_seller_ptrs_ = {buy_order.details_.market_member_ptr_,
-                        sale_order.details_.market_member_ptr_};
+  buyer_seller_id_ = {buy_order.details_.market_member_id_,
+                      sale_order.details_.market_member_id_};
   buyer_seller_orders_id_ = {buy_order.id_, sale_order.id_};
 
   diff_ =
@@ -47,8 +47,8 @@ bool OrdersMatching<Order>::DoMatch(const OrderType& buy_order,
       sale_order.details_.side_ == TradingSide::kBuy) {
     return DoMatch(sale_order, buy_order);
   }
-  return (buy_order.details_.market_member_ptr_ !=
-          sale_order.details_.market_member_ptr_) &&
+  return (buy_order.details_.market_member_id_ !=
+          sale_order.details_.market_member_id_) &&
          (buy_order.details_.side_ != sale_order.details_.side_) &&
          (buy_order.details_.unit_price_ >= sale_order.details_.unit_price_);
 }

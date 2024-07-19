@@ -24,17 +24,29 @@ class Wallet {
     return std::get<Currency>(balance_);
   }
 
+  template <typename Currency, typename... Currencies, typename... Args>
+  void TopUp(const Currency& amount, const Args&... args);
+
   template <typename Currency,
             std::enable_if_t<!std::is_arithmetic_v<Currency>, bool> = true>
   void TopUp(const Currency& amount);
+
+  template <typename Currency, typename... Currencies, typename... Args>
+  void TopUp(std::size_t num_units, const Args&... args);
 
   template <typename Currency>
   void TopUp(std::size_t num_units,
              const std::type_identity_t<Currency>& currency_type = Currency());
 
+  template <typename Currency, typename... Currencies, typename... Args>
+  void Withdraw(const Currency& amount, const Args&... args);
+
   template <typename Currency,
             std::enable_if_t<!std::is_arithmetic_v<Currency>, bool> = true>
   void Withdraw(const Currency& amount);
+
+  template <typename Currency, typename... Currencies, typename... Args>
+  void Withdraw(std::size_t num_units, const Args&... args);
 
   template <typename Currency>
   void Withdraw(

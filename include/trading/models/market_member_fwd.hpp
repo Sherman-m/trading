@@ -5,6 +5,7 @@ TRADING_NAMESPACE_BEGIN
 
 namespace models {
 
+template <typename Config>
 class MarketMember;
 
 }  // namespace models

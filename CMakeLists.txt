@@ -57,3 +57,7 @@ file(GLOB_RECURSE TESTS_SOURCES
   
 add_executable(${CMAKE_PROJECT_NAME}_tests ${TESTS_SOURCES}) 
 target_link_libraries(${CMAKE_PROJECT_NAME}_tests PRIVATE ${CMAKE_PROJECT_NAME} gtest::gtest)
+
+
+add_executable(${CMAKE_PROJECT_NAME}_exec src/main.cpp)
+target_link_libraries(${CMAKE_PROJECT_NAME}_exec PRIVATE ${CMAKE_PROJECT_NAME})
